@@ -1,0 +1,85 @@
+#include "ft_printf.h"
+#include <limits.h>
+
+int main(void)
+{
+	char *str = "TEST un gros string de ouffff!!";
+
+	ft_printf("Let's print a simple sentence.\n");
+	printf("Let's print a simple sentence.\n");
+	ft_printf("%b\n", '0');
+	printf("%b\n", '0');
+	ft_printf("A char inside a sentence: %c. Did it work?\n", 'F');
+	printf("A char inside a sentence: %c. Did it work?\n", 'F');
+	ft_printf("Let's see if the cast is correctly done: %c. Did it work?\n", 48);
+	printf("Let's see if the cast is correctly done: %c. Did it work?\n", 48);
+	ft_printf("%s\n", "This sentence is retrieved from va_args!");
+	printf("%s\n", "This sentence is retrieved from va_args!");
+	ft_printf("Complete the sentence: You %s nothing, Jon Snow.\n", "know");
+	printf("Complete the sentence: You %s nothing, Jon Snow.\n", "know");
+	ft_printf("Complete the sentence: You %s nothing, Jon Snow.\n", (char *)0);
+	printf("Complete the sentence: You %s nothing, Jon Snow.\n", (char *)0);
+	ft_printf("%c%ccth %s%s a%cg%s: Y%sou %s no%ching Snow.%s\n", 'W', 'i', "some", "more", 'r', "s", "", "know", 't', ", Jon");
+	printf("%c%ccth %s%s a%cg%s: Y%sou %s no%ching Snow.%s\n", 'W', 'i', "some", "more", 'r', "s", "", "know", 't', ", Jon");
+	int m = ft_printf(" %d\n", 100);
+	int n = printf(" %d\n", 100);
+	int b = ft_printf("m = %d, n = %d\n",m ,n);
+	int c = printf("m = %d, n = %d\n",m ,n);
+	ft_printf("b = %d, c = %d\n",b ,c);
+	printf("b = %d, c = %d\n",b ,c);
+	ft_printf("Should print a single sign: %%.\n");
+	printf("Should print a single sign: %%.\n");
+	ft_printf("Complete the sentence: You %s nothing, Jon Snow.\n", "know");
+	printf("Complete the sentence: You %s nothing, Jon Snow.\n", "know");
+	printf("%s%c%c%c%s%%%s%c\n", "Loading ", '.', '.', '.', " 99", "Please wait", '\n');
+	ft_printf("%s%c%c%c%s%%%s%c\n", "Loading ", '.', '.', '.', " 99", "Please wait", '\n');
+	ft_printf("css%ccs%scscscs\n", 'T', "Test");
+	printf("css%ccs%scscscs\n", 'T', "Test");
+	ft_printf("%s\n", str);
+	printf("%s\n", str);
+	ft_printf("man gcc: \n%s\n", str);
+	printf("man gcc: \n%s\n", str);
+	ft_printf("NULL\n");
+	printf("NULL\n");
+	ft_printf("%c\n", '\0');
+	printf("%c\n", '\0');
+	long int l = (unsigned int)INT_MAX + 1024;
+	long int lon = (unsigned int)INT_MIN - 1024;
+	ft_printf("%u\n", 1024);
+	printf("%u\n", 1024);
+	ft_printf("%d\n", -1024);
+	printf("%d\n", -1024);
+	ft_printf("%d\n", 0);
+	printf("%d\n", 0);
+	ft_printf("%d\n", INT_MAX);
+	printf("%d\n", INT_MAX);
+	ft_printf("%d\n", INT_MIN);
+	printf("%d\n", INT_MIN);
+	ft_printf("There is %d bytes in %d KB\n", 1024, 1);
+	printf("There is %d bytes in %d KB\n", 1024, 1);
+	ft_printf("%d - %d = %d\n", 1024, 2048, -1024);
+	printf("%d - %d = %d\n", 1024, 2048, -1024);
+	ft_printf("%d + %d = %d\n", INT_MIN, INT_MAX, (INT_MIN + INT_MAX));
+	printf("%d + %d = %d\n", INT_MIN, INT_MAX, (INT_MIN + INT_MAX));
+	ft_printf("%i\n", 1024);
+	printf("%i\n", 1024);
+	ft_printf("%i\n", -1024);
+	printf("%i\n", -1024);
+	ft_printf("%i\n", 0);
+	printf("%i\n", 0);
+	ft_printf("%i\n", INT_MAX);
+	printf("%i\n", INT_MAX);
+	ft_printf("%i\n", INT_MIN);
+	printf("%i\n", INT_MIN);
+	ft_printf("%x\n", 1);
+	printf("%x\n", 1);
+	ft_printf("%X\n", 1);
+	printf("%X\n", 1);
+	b = ft_printf("\001\002\007\v\010\f\r\n");
+	c = printf("\001\002\007\v\010\f\r\n");
+	ft_printf("b = %d, c = %d\n",b ,c);
+	printf("b = %d, c = %d\n",b ,c);
+	ft_printf(" %p %p \n", 0, 0);
+	printf("Size of uintptr_t: %zu\n", sizeof(uintptr_t));
+	return (0);
+}

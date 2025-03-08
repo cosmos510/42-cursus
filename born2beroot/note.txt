@@ -1,0 +1,24 @@
+login as root : su -
+create user: sudo adduser "username"
+add user in group : usermod -aG "grp" "username"
+check if user in group : getent group "grp"
+to change/add user privilege spec: sudo visudo(open sudoers file)  your_username  	ALL=(ALL) ALL
+check ssh status: systemctl status ssh
+open port for ssh config: /etc/ssh/sshd_config
+enable parefeu: ufw enable
+check status parefeu: sudo ufw enable status numbered
+create group : sudo groupadd "name_grp"
+to get all user: cut -d: -f1 /etc/passwd
+to know wich group user is in : groups
+change password user : chage -l "user"
+
+
+
+
+
+
+
+
+maxmaxrti: same 
+root : same
+test : Maximemartin1
