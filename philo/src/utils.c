@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/24 10:15:52 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/05/24 10:19:30 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/05/27 19:07:25 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,4 +35,14 @@ long	ft_atoi(const char *str)
 		i++;
 	}
 	return (result * sign);
+}
+
+void	*safe_malloc(size_t bytes)
+{
+	void	*ret;
+
+	ret = malloc(bytes);
+	if (!ret)
+		print_error("Error with the malloc");
+	return (ret);
 }

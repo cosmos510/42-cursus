@@ -6,7 +6,7 @@
 #    By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/05/23 10:24:32 by maximemarti       #+#    #+#              #
-#    Updated: 2025/05/24 10:16:51 by maximemarti      ###   ########.fr        #
+#    Updated: 2025/05/27 19:07:55 by maximemarti      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -19,6 +19,9 @@ RM      = rm -rf
 SRCS    = src/philo.c \
           src/error.c \
 		  src/utils.c \
+		  src/init_var.c \
+		  src/safe_mutex.c \
+		  src/safe_thread.c \
 
 OBJS    = $(SRCS:.c=.o)
 
