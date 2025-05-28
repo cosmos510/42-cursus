@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/27 18:06:17 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/05/27 19:41:25 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/05/28 13:39:27 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ void	assign_forks(t_philo *philo, t_fork *forks, int philo_pos)
 	philo_nb = philo->table->philo_nbr;
 	philo->first_fork = &forks[(philo_pos + 1) % philo_nb];
 	philo->second_fork = &forks[philo_pos];
-	if (philo->id % 2)
+	if (philo->id % 2 == 0)
 	{
 		philo->first_fork = &forks[philo_pos];
 		philo->second_fork = &forks[(philo_pos + 1) % philo_nb];
@@ -63,6 +63,7 @@ void	philo_init(t_table *table)
 		philo->full = false;
 		philo->meals_counter = 0;
 		philo->table = table;
+		safe_mutex_handle(&philo->philo_mutex, INIT);
 		assign_forks(philo, table->forks, i);
 	}
 }
@@ -73,7 +74,11 @@ void	data_init(t_table *table)
 
 	i = -1;
 	table->end_simulation = false;
+	table->all_threads_ready = false;
+	table->thread_running_nb = 0;
 	table->philo = safe_malloc(sizeof(t_philo) * table->philo_nbr);
+	safe_mutex_handle(&table->table_mutex, INIT);
+	safe_mutex_handle(&table->write_lock, INIT);
 	table->forks = safe_malloc(sizeof(t_fork) * table->philo_nbr);
 	while (++i < table->philo_nbr)
 	{

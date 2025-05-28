@@ -6,7 +6,7 @@
 #    By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/05/23 10:24:32 by maximemarti       #+#    #+#              #
-#    Updated: 2025/05/27 19:07:55 by maximemarti      ###   ########.fr        #
+#    Updated: 2025/05/28 13:34:04 by maximemarti      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,6 +22,11 @@ SRCS    = src/philo.c \
 		  src/init_var.c \
 		  src/safe_mutex.c \
 		  src/safe_thread.c \
+		  src/dinner.c \
+		  src/getters_setter.c \
+		  src/synchro_utils.c \
+		  src/write.c \
+		  src/monitor.c \
 
 OBJS    = $(SRCS:.c=.o)
 

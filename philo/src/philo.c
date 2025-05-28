@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/23 10:22:28 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/05/27 18:40:22 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/05/28 14:15:44 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,5 +34,7 @@ int	main(int ac, char **av)
 	if (!table)
 		return (1);
 	data_init(table);
+	dinner_start(table);
+	clean(table);
 	return (0);
 }
