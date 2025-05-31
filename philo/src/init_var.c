@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/27 18:06:17 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/05/28 13:39:27 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/05/31 12:26:31 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,14 +20,15 @@ t_table	*init_var(char **av)
 	if (!table)
 		return (NULL);
 	table->philo_nbr = ft_atoi(av[1]);
-	table->time_to_die = ft_atoi(av[2]) * 1e3;
-	table->time_to_eat = ft_atoi(av[3]) * 1e3;
-	table->time_to_sleep = ft_atoi(av[4]) * 1e3;
-	if (table->time_to_die < 6e4 || table->time_to_eat < 6e4 \
-	|| table->time_to_sleep < 6e4)
+	table->time_to_die = ft_atoi(av[2]);
+	table->time_to_eat = ft_atoi(av[3]);
+	table->time_to_sleep = ft_atoi(av[4]);
+	if (table->time_to_die < 60 || table->time_to_eat < 60 \
+	|| table->time_to_sleep < 60)
 	{
 		print_error("Use time stamp major than 60ms");
-		//free(table);
+		free(table);
+		return (NULL);
 	}
 	if (av[5])
 		table->nbr_limit_meals = ft_atoi(av[5]);
@@ -41,12 +42,16 @@ void	assign_forks(t_philo *philo, t_fork *forks, int philo_pos)
 	int	philo_nb;
 
 	philo_nb = philo->table->philo_nbr;
-	philo->first_fork = &forks[(philo_pos + 1) % philo_nb];
-	philo->second_fork = &forks[philo_pos];
-	if (philo->id % 2 == 0)
+	// Always take the lower numbered fork first to prevent deadlock
+	if (philo_pos < (philo_pos + 1) % philo_nb)
 	{
 		philo->first_fork = &forks[philo_pos];
 		philo->second_fork = &forks[(philo_pos + 1) % philo_nb];
+	}
+	else
+	{
+		philo->first_fork = &forks[(philo_pos + 1) % philo_nb];
+		philo->second_fork = &forks[philo_pos];
 	}
 }
 

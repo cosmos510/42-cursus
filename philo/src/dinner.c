@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/28 11:10:23 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/05/28 14:10:12 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/05/31 12:26:32 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,27 +14,52 @@
 
 // ./phgilo 5 800 200 200 [5]
 
-void	thinking(t_philo *philo)
+void	thinking(t_philo *philo, bool pre_simulation)
 {
-	write_status(THINKING, philo);
+	long t_eat;
+	long t_sleep;
+	long t_think;
+
+	if (!pre_simulation)
+		write_status(THINKING, philo);
+	if (philo->table->philo_nbr % 2 == 0)
+		return ;
+	t_eat = philo->table->time_to_eat;
+	t_sleep = philo->table->time_to_sleep;
+	t_think = (t_eat * 2) - t_sleep;
+	if (t_think < 0)
+		t_think = 0;
+	if (t_think > 0)
+		precise_usleep(t_think * 1000, philo->table);
 }
 
 void	eat(t_philo *philo)
 {
+	// Take first fork
 	safe_mutex_handle(&philo->first_fork->fork, LOCK);
 	write_status(TAKE_FIRST_FORK, philo);
+	
+	// Take second fork
 	safe_mutex_handle(&philo->second_fork->fork, LOCK);
 	write_status(TAKE_SECOND_FORK, philo);
+	
+	// Start eating
+	write_status(EATING, philo);
 	set_long(&philo->philo_mutex, &philo->last_meal_time, \
 		get_time(MILLISECOND));
 	philo->meals_counter++;
-	write_status(EATING, philo);
-	precise_usleep(philo->table->time_to_eat, philo->table);
+	
+	// Eat for the required time
+	precise_usleep(philo->table->time_to_eat * 1000, philo->table);
+	
+	// Check if philosopher is full
 	if (philo->table->nbr_limit_meals > 0 && \
 		philo->meals_counter == philo->table->nbr_limit_meals)
 		set_bool(&philo->philo_mutex, &philo->full, true);
-	safe_mutex_handle(&philo->first_fork->fork, UNLOCK);
+	
+	// Release forks in reverse order
 	safe_mutex_handle(&philo->second_fork->fork, UNLOCK);
+	safe_mutex_handle(&philo->first_fork->fork, UNLOCK);
 }
 
 void	*dinner_simulation(void *data)
@@ -46,14 +71,15 @@ void	*dinner_simulation(void *data)
 	set_long(&philo->philo_mutex, &philo->last_meal_time, \
 		get_time(MILLISECOND));
 	increase_long(&philo->table->table_mutex, &philo->table->thread_running_nb);
+	de_syn_philo(philo);
 	while (!simulation_finished(philo->table))
 	{
 		if (philo->full)
 			break ;
 		eat(philo);
 		write_status(SLEEPING, philo);
-		precise_usleep(philo->table->time_to_sleep, philo->table);
-		thinking(philo);
+		precise_usleep(philo->table->time_to_sleep * 1000, philo->table);
+		thinking(philo, false);
 	}
 	return (NULL);
 }
@@ -97,4 +123,5 @@ void	dinner_start(t_table *table)
 		safe_thread_handle(&table->philo[i].thread_id, NULL, NULL, JOIN);
 	set_bool(&table->table_mutex, &table->end_simulation, true);
 	safe_thread_handle(&table->monitor, NULL, NULL, JOIN);
+	//usleep(1000); // Give a small delay to ensure all threads are truly finished
 }

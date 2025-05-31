@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/24 09:48:56 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/05/28 14:14:54 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/05/28 14:42:00 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,7 +118,7 @@ void	safe_thread_handle(pthread_t *thread, void *(*foo)(void *), void *data, \
 //dinner.c//
 void	dinner_start(t_table *table);
 void	eat(t_philo *philo);
-void	thinking(t_philo *philo);
+void	thinking(t_philo *philo, bool pre_simulation);
 void	*lone_philo(void *arg);
 //getter_setter.c//
 bool	simulation_finished(t_table *table);
@@ -130,6 +130,7 @@ void	set_bool(t_mtx *mutex, bool *dest, bool value);
 void	wait_all_threads(t_table *table);
 bool	all_threads_running(t_mtx *mutex, long *threads, long philo_nbr);
 void	increase_long(t_mtx *mutex, long *value);
+void	de_syn_philo(t_philo *philo);
 //write.c//
 void	write_status(t_philo_status status, t_philo *philo);
 //monitor.c//

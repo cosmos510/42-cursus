@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/24 10:15:52 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/05/28 14:17:59 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/05/28 14:47:15 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,9 +56,9 @@ long	get_time(t_time_code time_code)
 	if (SECOND == time_code)
 		return (tv.tv_sec + (tv.tv_usec / 1e6));
 	else if (MILLISECOND == time_code)
-		return ((tv.tv_sec * 1e6) + (tv.tv_usec / 1e3));
+		return ((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 	else if (MICROSECOND == time_code)
-		return ((tv.tv_sec * 1e6) + tv.tv_usec);
+		return ((tv.tv_sec * 1000000) + tv.tv_usec);
 	else
 		print_error("Wrong input to get time");
 	return (42);
@@ -97,9 +97,11 @@ void	clean(t_table *table)
 	{
 		philo = table->philo + i;
 		safe_mutex_handle(&philo->philo_mutex, DESTROY);
+		safe_mutex_handle(&table->forks[i].fork, DESTROY);
 	}
 	safe_mutex_handle(&table->write_lock, DESTROY);
 	safe_mutex_handle(&table->table_mutex, DESTROY);
 	free(table->forks);
 	free(table->philo);
+	free(table);
 }
