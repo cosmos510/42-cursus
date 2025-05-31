@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/28 11:10:23 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/05/31 12:26:32 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/05/31 12:41:49 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,9 +16,9 @@
 
 void	thinking(t_philo *philo, bool pre_simulation)
 {
-	long t_eat;
-	long t_sleep;
-	long t_think;
+	long	t_eat;
+	long	t_sleep;
+	long	t_think;
 
 	if (!pre_simulation)
 		write_status(THINKING, philo);
@@ -35,29 +35,18 @@ void	thinking(t_philo *philo, bool pre_simulation)
 
 void	eat(t_philo *philo)
 {
-	// Take first fork
 	safe_mutex_handle(&philo->first_fork->fork, LOCK);
 	write_status(TAKE_FIRST_FORK, philo);
-	
-	// Take second fork
 	safe_mutex_handle(&philo->second_fork->fork, LOCK);
 	write_status(TAKE_SECOND_FORK, philo);
-	
-	// Start eating
 	write_status(EATING, philo);
 	set_long(&philo->philo_mutex, &philo->last_meal_time, \
 		get_time(MILLISECOND));
 	philo->meals_counter++;
-	
-	// Eat for the required time
 	precise_usleep(philo->table->time_to_eat * 1000, philo->table);
-	
-	// Check if philosopher is full
 	if (philo->table->nbr_limit_meals > 0 && \
 		philo->meals_counter == philo->table->nbr_limit_meals)
 		set_bool(&philo->philo_mutex, &philo->full, true);
-	
-	// Release forks in reverse order
 	safe_mutex_handle(&philo->second_fork->fork, UNLOCK);
 	safe_mutex_handle(&philo->first_fork->fork, UNLOCK);
 }
@@ -123,5 +112,4 @@ void	dinner_start(t_table *table)
 		safe_thread_handle(&table->philo[i].thread_id, NULL, NULL, JOIN);
 	set_bool(&table->table_mutex, &table->end_simulation, true);
 	safe_thread_handle(&table->monitor, NULL, NULL, JOIN);
-	//usleep(1000); // Give a small delay to ensure all threads are truly finished
 }

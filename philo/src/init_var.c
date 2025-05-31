@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/27 18:06:17 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/05/31 12:26:31 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/05/31 12:42:00 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,6 @@ void	assign_forks(t_philo *philo, t_fork *forks, int philo_pos)
 	int	philo_nb;
 
 	philo_nb = philo->table->philo_nbr;
-	// Always take the lower numbered fork first to prevent deadlock
 	if (philo_pos < (philo_pos + 1) % philo_nb)
 	{
 		philo->first_fork = &forks[philo_pos];

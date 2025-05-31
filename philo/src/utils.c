@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/24 10:15:52 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/05/28 14:47:15 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/05/31 12:40:35 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,19 +77,22 @@ void	precise_usleep(long usec, t_table *table)
 			break ;
 		elapse = get_time(MICROSECOND) - start;
 		remaining = usec - elapse;
-		if (remaining > 1e3)
+		if (remaining > 1e4)
 			usleep(remaining / 2);
+		else if (remaining > 1e3)
+			usleep(remaining / 4);
 		else
 		{
 			while (get_time(MICROSECOND) - start < usec)
-				;
+				if (simulation_finished(table))
+					return ;
 		}
 	}
 }
 
 void	clean(t_table *table)
 {
-	t_philo *philo;
+	t_philo	*philo;
 	int		i;
 
 	i = -1;

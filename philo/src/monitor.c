@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/28 13:34:21 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/05/31 12:31:34 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/05/31 12:42:13 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ void	*monitor_dinner(void *data)
 				write_status(DIED, table->philo + i);
 			}
 		}
-		usleep(1000); // Add small delay to prevent too frequent checking
+		usleep(1000);
 	}
 	return (NULL);
 }
