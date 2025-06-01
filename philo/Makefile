@@ -5,45 +5,38 @@
 #                                                     +:+ +:+         +:+      #
 #    By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2025/05/23 10:24:32 by maximemarti       #+#    #+#              #
-#    Updated: 2025/05/28 13:34:04 by maximemarti      ###   ########.fr        #
+#    Created: 2025/05/24 10:15:52 by maximemarti       #+#    #+#              #
+#    Updated: 2025/06/01 19:23:03 by maximemarti      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME    = philo
-
+name 	= philo
 CC      = gcc
 CFLAGS  = -Wall -Wextra -Werror
-RM      = rm -rf
+DEBUG_FLAGS = -DDEBUG=1
 
-SRCS    = src/philo.c \
-          src/error.c \
-		  src/utils.c \
-		  src/init_var.c \
-		  src/safe_mutex.c \
-		  src/safe_thread.c \
-		  src/dinner.c \
-		  src/getters_setter.c \
-		  src/synchro_utils.c \
-		  src/write.c \
-		  src/monitor.c \
+NAME    = philo
 
-OBJS    = $(SRCS:.c=.o)
+SRC     = src/philo.c src/utils.c src/cleanup.c src/monitor.c src/init_var.c src/debug.c src/dinner.c
+OBJ     = $(SRC:.c=.o)
+
+all: $(NAME)
+
+$(NAME): $(OBJ)
+	$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-all: $(NAME)
-
-$(NAME): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
+debug: CFLAGS += $(DEBUG_FLAGS)
+debug: fclean all
 
 clean:
-	$(RM) $(OBJS)
+	rm -f $(OBJ)
 
 fclean: clean
-	$(RM) $(NAME)
+	rm -f $(NAME)
 
 re: fclean all
 
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re debug

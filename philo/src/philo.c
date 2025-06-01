@@ -6,35 +6,88 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/23 10:22:28 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/05/28 14:15:44 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/06/01 19:18:37 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/philo.h"
 
-int	validate_args(int ac, char **av)
+static int	validate_args(int argc, char **argv)
 {
-	if (ac != 5 && ac != 6)
+	if (argc != 5 && argc != 6)
 	{
-		print_error(NULL);
-		return (0);
+		printf("Usage: %s number_of_philosophers time_to_die ", argv[0]);
+		printf("time_to_eat time_to_sleep ");
+		printf("[number_of_times_each_philosopher_must_eat]\n");
+		return (1);
 	}
-	if (check_error_input(av) == 1)
-		return (0);
-	return (1);
+	return (0);
 }
 
-int	main(int ac, char **av)
+static int	initialize_simulation(t_data *data, int argc, char **argv)
 {
-	t_table	*table;
+	int	i;
 
-	if (!validate_args(ac, av))
+	if (init_data(data, argc, argv) != 0 || init_mutexes(data) != 0 \
+			|| init_philos(data) != 0)
+	{
+		cleanup(data);
 		return (1);
-	table = init_var(av);
-	if (!table)
+	}
+	data->start_time = get_time_ms();
+	i = 0;
+	while (i < data->num_philos)
+	{
+		data->philos[i].last_meal_time = data->start_time;
+		i++;
+	}
+	return (0);
+}
+
+static int	create_threads(t_data *data, pthread_t *monitor)
+{
+	int	i;
+
+	i = -1;
+	while (++i < data->num_philos)
+	{
+		if (pthread_create(&data->philos[i].thread, NULL, \
+			philo_routine, &data->philos[i]) != 0)
+		{
+			set_simulation_end(data);
+			return (1);
+		}
+	}
+	if (pthread_create(monitor, NULL, monitor_routine, data) != 0)
+	{
+		set_simulation_end(data);
 		return (1);
-	data_init(table);
-	dinner_start(table);
-	clean(table);
+	}
+	return (0);
+}
+
+static void	join_threads(t_data *data, pthread_t monitor)
+{
+	int	i;
+
+	i = -1;
+	while (++i < data->num_philos)
+		pthread_join(data->philos[i].thread, NULL);
+	pthread_join(monitor, NULL);
+}
+
+int	main(int argc, char **argv)
+{
+	t_data		data;
+	pthread_t	monitor;
+
+	if (validate_args(argc, argv) != 0)
+		return (1);
+	if (initialize_simulation(&data, argc, argv) != 0)
+		return (1);
+	if (create_threads(&data, &monitor) != 0)
+		return (1);
+	join_threads(&data, monitor);
+	cleanup(&data);
 	return (0);
 }

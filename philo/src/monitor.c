@@ -6,47 +6,72 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/28 13:34:21 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/05/31 12:42:13 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/06/01 19:18:56 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/philo.h"
 
-bool	philo_died(t_philo *philo)
+bool	check_if_dead(t_philo *philo)
 {
-	long	elpased;
-	long	t_to_die;
+	long	current_time;
+	long	last_meal;
 
-	if (get_bool(&philo->philo_mutex, &philo->full))
-		return (false);
-	elpased = get_time(MILLISECOND) - \
-		get_long(&philo->philo_mutex, &philo->last_meal_time);
-	t_to_die = philo->table->time_to_die;
-	if (elpased > t_to_die)
+	pthread_mutex_lock(&philo->meal_mutex);
+	last_meal = philo->last_meal_time;
+	pthread_mutex_unlock(&philo->meal_mutex);
+	current_time = get_time_ms();
+	if (current_time - last_meal > philo->data->time_to_die)
+	{
+		print_status(philo, DIED);
+		set_simulation_end(philo->data);
 		return (true);
+	}
 	return (false);
 }
 
-void	*monitor_dinner(void *data)
+bool	check_if_all_ate(t_data *data)
 {
-	t_table	*table;
+	int	i;
+	int	count;
+
+	if (data->must_eat_count == -1)
+		return (false);
+	i = 0;
+	count = 0;
+	while (i < data->num_philos)
+	{
+		pthread_mutex_lock(&data->philos[i].meal_mutex);
+		if (data->philos[i].eat_count >= data->must_eat_count)
+			count++;
+		pthread_mutex_unlock(&data->philos[i].meal_mutex);
+		i++;
+	}
+	if (count == data->num_philos)
+	{
+		set_simulation_end(data);
+		return (true);
+	}
+	return (false);
+}
+
+void	*monitor_routine(void *arg)
+{
+	t_data	*data;
 	int		i;
 
-	table = (t_table *)data;
-	while (!all_threads_running(&table->table_mutex, \
-		&table->thread_running_nb, table->philo_nbr))
-		;
-	while (!simulation_finished(table))
+	data = (t_data *)arg;
+	while (!get_simulation_end(data))
 	{
-		i = -1;
-		while (++i < table->philo_nbr && !simulation_finished(table))
+		i = 0;
+		while (i < data->num_philos && !get_simulation_end(data))
 		{
-			if (philo_died(table->philo + i))
-			{
-				set_bool(&table->table_mutex, &table->end_simulation, true);
-				write_status(DIED, table->philo + i);
-			}
+			if (check_if_dead(&data->philos[i]))
+				break ;
+			i++;
 		}
+		if (get_simulation_end(data) || check_if_all_ate(data))
+			break ;
 		usleep(1000);
 	}
 	return (NULL);
