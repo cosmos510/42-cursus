@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/23 10:22:28 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/06/01 19:18:37 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/06/02 19:00:34 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,9 +16,14 @@ static int	validate_args(int argc, char **argv)
 {
 	if (argc != 5 && argc != 6)
 	{
-		printf("Usage: %s number_of_philosophers time_to_die ", argv[0]);
-		printf("time_to_eat time_to_sleep ");
-		printf("[number_of_times_each_philosopher_must_eat]\n");
+		printf(COLOR_GREEN "Usage: " COLOR_RESET);
+		printf(COLOR_CYAN "%s " COLOR_RESET, argv[0]);
+		printf(COLOR_YELLOW "number_of_philosophers " COLOR_RESET);
+		printf(COLOR_BLUE "time_to_die " COLOR_RESET);
+		printf(COLOR_MAGENTA "time_to_eat " COLOR_RESET);
+		printf(COLOR_RED "time_to_sleep " COLOR_RESET);
+		printf(COLOR_WHITE "[number_of_times_each_philosopher_must_eat]\n" \
+			COLOR_RESET);
 		return (1);
 	}
 	return (0);

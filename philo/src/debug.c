@@ -6,14 +6,14 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/01 12:02:30 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/06/02 12:19:35 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/06/02 19:22:36 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/philo.h"
 
-void	debug_message(t_philo *philo, int status,
-	long timestamp, pthread_mutex_t *fork)
+void	debug_message(t_philo *philo, int status, long timestamp, \
+	pthread_mutex_t *fork)
 {
 	if (status == THINKING)
 		print_thinking(philo, timestamp);
@@ -44,13 +44,14 @@ void	print_meal_summary(t_data *data)
 {
 	int	i;
 
-	printf("\n[DEBUG] === MEAL SUMMARY ===\n");
+	printf(COLOR_MAGENTA "\n[DEBUG] === MEAL SUMMARY ===\n" COLOR_RESET);
 	i = 0;
 	while (i < data->num_philos)
 	{
-		printf("[DEBUG] Philosopher %d ate %d times\n", \
+		printf(COLOR_WHITE "[DEBUG] Philosopher %d " \
+			COLOR_GREEN "ate %d times\n" COLOR_RESET, \
 			data->philos[i].id, data->philos[i].eat_count);
 		i++;
 	}
-	printf("[DEBUG] ====================\n\n");
+	printf(COLOR_MAGENTA "[DEBUG] ====================\n\n" COLOR_RESET);
 }

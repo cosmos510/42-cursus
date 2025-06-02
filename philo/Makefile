@@ -6,7 +6,7 @@
 #    By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/05/24 10:15:52 by maximemarti       #+#    #+#              #
-#    Updated: 2025/06/02 18:03:27 by maximemarti      ###   ########.fr        #
+#    Updated: 2025/06/02 19:12:35 by maximemarti      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,7 +17,7 @@ DEBUG_FLAGS = -DDEBUG=1
 
 NAME    = philo
 
-SRC     = src/philo.c src/utils.c src/cleanup.c src/monitor.c src/init_var.c src/debug.c src/dinner.c src/debug_utils.c src/init_var_utils.c
+SRC     = src/philo.c src/utils.c src/cleanup.c src/monitor.c src/init_var.c src/debug.c src/dinner.c src/debug_utils.c src/init_var_utils.c src/utils_color.c
 OBJ     = $(SRC:.c=.o)
 
 all: $(NAME)

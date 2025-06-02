@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/24 10:15:52 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/06/02 11:59:52 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/06/02 19:25:21 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,10 +20,32 @@ long	get_time_ms(void)
 	return ((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 }
 
+static void	print_status_message(t_philo *philo, int status, \
+	const char *color, long timestamp)
+{
+	if (status == THINKING)
+		printf("%s%ld %d is thinking\n" COLOR_RESET, \
+			color, timestamp, philo->id);
+	else if (status == EATING)
+		printf("%s%ld %d is eating\n" COLOR_RESET, \
+			color, timestamp, philo->id);
+	else if (status == SLEEPING)
+		printf("%s%ld %d is sleeping\n" COLOR_RESET, \
+			color, timestamp, philo->id);
+	else if (status == FORK_TAKEN)
+		printf("%s%ld %d has taken a fork\n" COLOR_RESET, \
+			color, timestamp, philo->id);
+	else if (status == DIED)
+		printf("%s%ld %d died\n" COLOR_RESET, color, \
+			timestamp, philo->id);
+}
+
 void	print_status(t_philo *philo, int status)
 {
-	long	timestamp;
+	long		timestamp;
+	const char	*color;
 
+	color = get_philo_color(philo->id);
 	if (DEBUG && status != FORK_TAKEN)
 		print_debug(philo, status, NULL);
 	else if (!DEBUG)
@@ -32,16 +54,7 @@ void	print_status(t_philo *philo, int status)
 		if (!get_simulation_end(philo->data))
 		{
 			timestamp = get_time_ms() - philo->data->start_time;
-			if (status == THINKING)
-				printf("%ld %d is thinking\n", timestamp, philo->id);
-			else if (status == EATING)
-				printf("%ld %d is eating\n", timestamp, philo->id);
-			else if (status == SLEEPING)
-				printf("%ld %d is sleeping\n", timestamp, philo->id);
-			else if (status == FORK_TAKEN)
-				printf("%ld %d has taken a fork\n", timestamp, philo->id);
-			else if (status == DIED)
-				printf("%ld %d died\n", timestamp, philo->id);
+			print_status_message(philo, status, color, timestamp);
 		}
 		pthread_mutex_unlock(&philo->data->print_mutex);
 	}

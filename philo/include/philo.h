@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/24 09:48:56 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/06/02 18:06:52 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/06/02 19:22:13 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,15 @@
 # ifndef DEBUG
 #  define DEBUG 0
 # endif
+
+# define COLOR_RESET   "\033[0m"
+# define COLOR_RED     "\033[0;31m"
+# define COLOR_GREEN   "\033[0;32m"
+# define COLOR_YELLOW  "\033[0;33m"
+# define COLOR_BLUE    "\033[0;34m"
+# define COLOR_MAGENTA "\033[0;35m"
+# define COLOR_CYAN    "\033[0;36m"
+# define COLOR_WHITE   "\033[0;37m"
 
 # define THINKING 0
 # define EATING 1
@@ -106,5 +115,8 @@ void	print_sleeping(t_philo *philo, long timestamp);
 void	print_fork_taken(t_philo *philo, long timestamp, \
 		pthread_mutex_t *fork);
 void	print_died(t_philo *philo, long timestamp);
+
+//utils_colors
+char	*get_philo_color(int id);
 
 #endif
