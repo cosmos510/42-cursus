@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/24 10:15:52 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/06/01 19:23:30 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/06/02 11:59:52 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,24 +24,27 @@ void	print_status(t_philo *philo, int status)
 {
 	long	timestamp;
 
-	if (DEBUG)
-		print_debug(philo, status);
-	pthread_mutex_lock(&philo->data->print_mutex);
-	if (!get_simulation_end(philo->data))
+	if (DEBUG && status != FORK_TAKEN)
+		print_debug(philo, status, NULL);
+	else if (!DEBUG)
 	{
-		timestamp = get_time_ms() - philo->data->start_time;
-		if (status == THINKING)
-			printf("%ld %d is thinking\n", timestamp, philo->id);
-		else if (status == EATING)
-			printf("%ld %d is eating\n", timestamp, philo->id);
-		else if (status == SLEEPING)
-			printf("%ld %d is sleeping\n", timestamp, philo->id);
-		else if (status == FORK_TAKEN)
-			printf("%ld %d has taken a fork\n", timestamp, philo->id);
-		else if (status == DIED)
-			printf("%ld %d died\n", timestamp, philo->id);
+		pthread_mutex_lock(&philo->data->print_mutex);
+		if (!get_simulation_end(philo->data))
+		{
+			timestamp = get_time_ms() - philo->data->start_time;
+			if (status == THINKING)
+				printf("%ld %d is thinking\n", timestamp, philo->id);
+			else if (status == EATING)
+				printf("%ld %d is eating\n", timestamp, philo->id);
+			else if (status == SLEEPING)
+				printf("%ld %d is sleeping\n", timestamp, philo->id);
+			else if (status == FORK_TAKEN)
+				printf("%ld %d has taken a fork\n", timestamp, philo->id);
+			else if (status == DIED)
+				printf("%ld %d died\n", timestamp, philo->id);
+		}
+		pthread_mutex_unlock(&philo->data->print_mutex);
 	}
-	pthread_mutex_unlock(&philo->data->print_mutex);
 }
 
 void	smart_sleep(long duration, t_data *data)

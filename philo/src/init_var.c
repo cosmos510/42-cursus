@@ -6,54 +6,58 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/27 18:06:17 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/06/01 19:23:34 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/06/02 18:05:01 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/philo.h"
 
-static int	ft_atoi(const char *str)
+int	ft_atoi(const char *str)
 {
-	int	result;
-	int	sign;
+	int			result;
+	int			sign;
+	const char	*start;
 
 	result = 0;
 	sign = 1;
 	while (*str == ' ' || (*str >= '\t' && *str <= '\r'))
 		str++;
+	start = str;
 	if (*str == '-' || *str == '+')
 	{
 		if (*str == '-')
 			sign = -1;
 		str++;
 	}
+	if (!(*str >= '0' && *str <= '9'))
+		return (-1);
 	while (*str >= '0' && *str <= '9')
 	{
 		result = result * 10 + (*str - '0');
 		str++;
 	}
+	if (*str != '\0' || str == start)
+		return (-1);
 	return (result * sign);
+}
+
+int	parse_args(t_data *data, int argc, char **argv)
+{
+	if (parse_philo_count(data, argv[1]))
+		return (1);
+	if (parse_time_settings(data, argv))
+		return (1);
+	if (parse_optional_args(data, argc, argv))
+		return (1);
+	return (0);
 }
 
 int	init_data(t_data *data, int argc, char **argv)
 {
 	memset(data, 0, sizeof(t_data));
-	data->num_philos = ft_atoi(argv[1]);
-	data->time_to_die = ft_atoi(argv[2]);
-	data->time_to_eat = ft_atoi(argv[3]);
-	data->time_to_sleep = ft_atoi(argv[4]);
 	data->simulation_end = false;
-	if (argc == 6)
-		data->must_eat_count = ft_atoi(argv[5]);
-	else
-		data->must_eat_count = -1;
-	if (data->num_philos <= 0 || data->time_to_die <= 0 \
-		|| data->time_to_eat <= 0 || data->time_to_sleep <= 0 \
-		|| (argc == 6 && data->must_eat_count <= 0))
-	{
-		printf("Error: Invalid arguments\n");
+	if (parse_args(data, argc, argv))
 		return (1);
-	}
 	return (0);
 }
 

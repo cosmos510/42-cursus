@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/24 09:48:56 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/06/01 19:15:26 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/06/02 18:06:52 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,13 @@ struct s_philo
 int		init_data(t_data *data, int argc, char **argv);
 int		init_mutexes(t_data *data);
 int		init_philos(t_data *data);
+int		ft_atoi(const char *str);
+
+// Initialization utils
+int		parse_optional_args(t_data *data, int argc, char **argv);
+int		parse_time_settings(t_data *data, char **argv);
+int		parse_philo_count(t_data *data, char *arg);
+int		parse_positive_int(const char *str, int *out);
 
 // Philosopher actions
 void	*philo_routine(void *arg);
@@ -89,6 +96,15 @@ void	debug_print_status(t_philo *philo, int status, const char *fmt, ...);
 void	cleanup(t_data *data);
 
 //debug
-void	print_debug(t_philo *philo, int status);
+void	print_debug(t_philo *philo, int status, pthread_mutex_t *fork);
+void	print_meal_summary(t_data *data);
+
+//debug_utils
+void	print_thinking(t_philo *philo, long timestamp);
+void	print_eating(t_philo *philo, long timestamp);
+void	print_sleeping(t_philo *philo, long timestamp);
+void	print_fork_taken(t_philo *philo, long timestamp, \
+		pthread_mutex_t *fork);
+void	print_died(t_philo *philo, long timestamp);
 
 #endif

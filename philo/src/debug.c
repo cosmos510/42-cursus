@@ -6,37 +6,28 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/01 12:02:30 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/06/01 19:15:48 by maximemarti      ###   ########.fr       */
+/*   Updated: 2025/06/02 12:19:35 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/philo.h"
 
-void	debug_message(t_philo *philo, int status, long timestamp)
+void	debug_message(t_philo *philo, int status,
+	long timestamp, pthread_mutex_t *fork)
 {
 	if (status == THINKING)
-		printf("[DEBUG] %ld ms: Philosopher %d is thinking (meals eaten: %d)\n",
-			timestamp, philo->id, philo->eat_count);
+		print_thinking(philo, timestamp);
 	else if (status == EATING)
-		printf("[DEBUG] %ld ms: Philosopher %d is eating meal #%d \
-			with forks %p and %p\n", \
-			timestamp, philo->id, philo->eat_count + 1,
-			(void *)philo->left_fork, (void *)philo->right_fork);
+		print_eating(philo, timestamp);
 	else if (status == SLEEPING)
-		printf("[DEBUG] %ld ms: Philosopher %d is sleeping \
-			after eating %d meals\n", \
-			timestamp, philo->id, philo->eat_count);
+		print_sleeping(philo, timestamp);
 	else if (status == FORK_TAKEN)
-		printf("[DEBUG] %ld ms: Philosopher %d has taken fork %p\n",
-			timestamp, philo->id, (void *)philo->left_fork);
+		print_fork_taken(philo, timestamp, fork);
 	else if (status == DIED)
-		printf("[DEBUG] %ld ms: Philosopher %d died after eating %d meals. \
-			Last meal: %ld ms ago\n", \
-			timestamp, philo->id, philo->eat_count,
-			timestamp - philo->last_meal_time);
+		print_died(philo, timestamp);
 }
 
-void	print_debug(t_philo *philo, int status)
+void	print_debug(t_philo *philo, int status, pthread_mutex_t *fork)
 {
 	long	timestamp;
 
@@ -44,7 +35,22 @@ void	print_debug(t_philo *philo, int status)
 	if (!get_simulation_end(philo->data))
 	{
 		timestamp = get_time_ms() - philo->data->start_time;
-		debug_message(philo, status, timestamp);
+		debug_message(philo, status, timestamp, fork);
 	}
 	pthread_mutex_unlock(&philo->data->print_mutex);
+}
+
+void	print_meal_summary(t_data *data)
+{
+	int	i;
+
+	printf("\n[DEBUG] === MEAL SUMMARY ===\n");
+	i = 0;
+	while (i < data->num_philos)
+	{
+		printf("[DEBUG] Philosopher %d ate %d times\n", \
+			data->philos[i].id, data->philos[i].eat_count);
+		i++;
+	}
+	printf("[DEBUG] ====================\n\n");
 }
