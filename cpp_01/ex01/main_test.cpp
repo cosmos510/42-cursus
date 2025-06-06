@@ -1,6 +1,6 @@
 #include "Zombie.hpp"
 #include <iostream>
-#include <cstdlib> // for std::atoi
+#include <cstdlib>
 
 int main(int argc, char** argv)
 {
