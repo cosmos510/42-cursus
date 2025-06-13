@@ -5,34 +5,44 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/06/13 09:17:09 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/06/13 18:24:41 by maximemarti      ###   ########.fr       */
+/*   Created: 2025/06/13 10:00:59 by maximemarti       #+#    #+#             */
+/*   Updated: 2025/06/13 18:23:00 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef FIXED_HPP
 #define FIXED_HPP
 
-// Déclaration de la classe Fixed
+#include <iostream>
+
 class Fixed
 {
-	private:
-		// Attributs privés
-		int value;
-		static const int nbr_bit = 8;
+private:
+	int value;
+	static const int nbr_bit = 8;
 
-	public:
-		// Constructeurs et destructeur
-		Fixed();
-		Fixed(const Fixed& value);
-		~Fixed();
+public:
+	Fixed();
+	Fixed(const int n);
+	Fixed(const float n);
+	Fixed(const Fixed& other);
 
-		// Opérateur d’affectation
-		Fixed& operator=(const Fixed&);
+	// Opérateur d’affectation
+	Fixed& operator=(const Fixed&);
 
-		// Méthodes d'accès
-		int getRawBits(void) const;
-		void setRawBits(int const raw);
+	// Destructeur
+	~Fixed();
+
+	// Méthodes d’accès
+	int getRawBits(void) const;
+	void setRawBits(int const raw);
+
+	// Méthodes de conversion
+	float toFloat(void) const;
+	int toInt(void) const;
 };
+
+// Surcharge d'opérateur pour l'affichage
+std::ostream& operator<<(std::ostream& os, const Fixed& fixed);
 
 #endif
