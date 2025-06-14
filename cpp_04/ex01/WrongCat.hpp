@@ -1,29 +1,31 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Dog.hpp                                            :+:      :+:    :+:   */
+/*   WrongWrongCat.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/06/13 23:19:41 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/06/14 11:42:34 by maximemarti      ###   ########.fr       */
+/*   Created: 2025/06/13 23:35:49 by maximemarti       #+#    #+#             */
+/*   Updated: 2025/06/13 23:36:01 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-#ifndef DOG_HPP
-#define DOG_HPP
-#include <iostream>
-#include "Animal.hpp"
+#ifndef WRONGCAT_HPP
+#define WRONGCAT_HPP
 
-class Dog : public Animal
+#include <iostream>
+#include "WrongAnimal.hpp"
+
+class WrongCat : public WrongAnimal
 {
 	public:
-		Dog();
-		Dog(const Dog& value);
-		~Dog();
+		WrongCat();
+		WrongCat(const WrongCat& value);
+		~WrongCat();
 
-		Dog &operator=(const Dog &value);
+		WrongCat &operator=(const WrongCat &value);
 		void makeSound() const;
 };
+
 #endif

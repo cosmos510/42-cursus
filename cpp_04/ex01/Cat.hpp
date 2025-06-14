@@ -1,29 +1,35 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Dog.hpp                                            :+:      :+:    :+:   */
+/*   Cat.hpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/06/13 23:19:41 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/06/14 11:42:34 by maximemarti      ###   ########.fr       */
+/*   Created: 2025/06/13 23:27:29 by maximemarti       #+#    #+#             */
+/*   Updated: 2025/06/14 12:17:19 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
-#ifndef DOG_HPP
-#define DOG_HPP
+#ifndef CAT_HPP
+#define CAT_HPP
 #include <iostream>
 #include "Animal.hpp"
+#include "Brain.hpp"
 
-class Dog : public Animal
+class Cat : public Animal
 {
+	private:
+		Brain* brain;
 	public:
-		Dog();
-		Dog(const Dog& value);
-		~Dog();
+		Cat();
+		Cat(const Cat& value);
+		~Cat();
 
-		Dog &operator=(const Dog &value);
+		Cat &operator=(const Cat &value);
 		void makeSound() const;
+		void setIdea(int index, const std::string& idea);
+		std::string getIdea(int index) const;
+		
 };
 #endif
