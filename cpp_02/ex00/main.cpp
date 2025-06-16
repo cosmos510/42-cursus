@@ -13,7 +13,7 @@
 #include <iostream>
 #include "Fixed.hpp"
 
-
+/*
 int main( void ) {
     Fixed a;
     Fixed b( a );
@@ -25,9 +25,9 @@ int main( void ) {
     std::cout << c.getRawBits() << std::endl;
 
     return 0;
-}
+}*/
 
-/*
+
 int main()
 {
     std::cout << "1. Create a with default constructor\n";
@@ -59,4 +59,4 @@ int main()
 
     std::cout << "\nEnd of main, destructors called automatically\n";
     return 0;
-}*/
+}

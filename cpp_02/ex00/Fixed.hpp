@@ -13,7 +13,6 @@
 #ifndef FIXED_HPP
 #define FIXED_HPP
 
-// Déclaration de la classe Fixed
 class Fixed
 {
 	private:
