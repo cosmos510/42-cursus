@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/16 08:28:55 by maximemarti       #+#    #+#             */
-/*   Updated: 2026/02/16 08:28:56 by maximemarti      ###   ########.fr       */
+/*   Updated: 2026/02/16 17:20:50 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,18 +23,21 @@ private:
 	int _grade;
 
 public:
-	Bureaucrat();
-	Bureaucrat(const std::string& name, int grade);
-	Bureaucrat(const Bureaucrat& other);
-	Bureaucrat& operator=(const Bureaucrat& other);
-	~Bureaucrat();
+	Bureaucrat();                                    // Default constructor
+	Bureaucrat(const std::string& name, int grade);  // Parametrized constructor
+	Bureaucrat(const Bureaucrat& other);             // Copy constructor
+	Bureaucrat& operator=(const Bureaucrat& other);  // Copy assignment operator
+	~Bureaucrat();                                   // Destructor
 
+	// Getters
 	const std::string& getName() const;
 	int getGrade() const;
 
+	// Member functions
 	void incrementGrade();
 	void decrementGrade();
 
+	// Exception classes
 	class GradeTooHighException : public std::exception {
 	public:
 		virtual const char* what() const throw();
@@ -46,6 +49,7 @@ public:
 	};
 };
 
+// Overload of insertion operator
 std::ostream& operator<<(std::ostream& os, const Bureaucrat& b);
 
 #endif
