@@ -1,23 +1,31 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   ft_strrchr.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/06/06 11:40:15 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/06/08 14:46:43 by maximemarti      ###   ########.fr       */
+/*   Created: 2024/10/01 22:33:03 by maximemarti       #+#    #+#             */
+/*   Updated: 2024/10/01 22:51:34 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Zombie.hpp"
+#include "libft.h"
 
-int main()
+char	*ft_strrchr(const char *s, int c)
 {
-	int horde_size = 10;
-	Zombie *horde = zombieHorde(horde_size, "zombie horde");
-	for (int i = 0; i < horde_size; i++)
-		horde[i].announce();
-	delete[] horde;
-	return 0;
+	int		i;
+	char	*res;
+
+	i = 0;
+	res = NULL;
+	while (s[i] != '\0')
+	{
+		if (s[i] == (char) c)
+			res = ((char *) &s[i]);
+		i++;
+	}
+	if (s[i] == (char) c)
+		res = ((char *) &s[i]);
+	return (res);
 }

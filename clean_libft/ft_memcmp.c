@@ -1,23 +1,29 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   ft_memcmp.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/06/06 11:40:15 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/06/08 14:46:43 by maximemarti      ###   ########.fr       */
+/*   Created: 2024/10/02 10:35:54 by maximemarti       #+#    #+#             */
+/*   Updated: 2024/10/02 10:45:02 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Zombie.hpp"
+#include "libft.h"
 
-int main()
+int	ft_memcmp(const void *s1, const void *s2, size_t n)
 {
-	int horde_size = 10;
-	Zombie *horde = zombieHorde(horde_size, "zombie horde");
-	for (int i = 0; i < horde_size; i++)
-		horde[i].announce();
-	delete[] horde;
-	return 0;
+	unsigned char	*tmp_s1;
+	unsigned char	*tmp_s2;
+	size_t			i;
+
+	tmp_s1 = (unsigned char *) s1;
+	tmp_s2 = (unsigned char *) s2;
+	i = 0;
+	if (n == 0)
+		return (0);
+	while (tmp_s1[i] == tmp_s2[i] && i < n - 1)
+		i++;
+	return (tmp_s1[i] - tmp_s2[i]);
 }

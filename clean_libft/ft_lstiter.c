@@ -1,23 +1,22 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   ft_lstiter.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/06/06 11:40:15 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/06/08 14:46:43 by maximemarti      ###   ########.fr       */
+/*   Created: 2024/10/05 00:20:14 by maximemarti       #+#    #+#             */
+/*   Updated: 2024/10/05 00:23:54 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Zombie.hpp"
+#include "libft.h"
 
-int main()
+void	ft_lstiter(t_list *lst, void (*f)(void *))
 {
-	int horde_size = 10;
-	Zombie *horde = zombieHorde(horde_size, "zombie horde");
-	for (int i = 0; i < horde_size; i++)
-		horde[i].announce();
-	delete[] horde;
-	return 0;
+	while (lst)
+	{
+		f(lst->content);
+		lst = lst->next;
+	}
 }

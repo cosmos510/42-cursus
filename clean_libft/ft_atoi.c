@@ -1,23 +1,38 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   ft_atoi.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/06/06 11:40:15 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/06/08 14:46:43 by maximemarti      ###   ########.fr       */
+/*   Created: 2024/10/02 15:59:24 by maximemarti       #+#    #+#             */
+/*   Updated: 2024/10/02 16:27:22 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Zombie.hpp"
+#include "libft.h"
 
-int main()
+int	ft_atoi(const char *str)
 {
-	int horde_size = 10;
-	Zombie *horde = zombieHorde(horde_size, "zombie horde");
-	for (int i = 0; i < horde_size; i++)
-		horde[i].announce();
-	delete[] horde;
-	return 0;
+	int	i;
+	int	sign;
+	int	result;
+
+	i = 0;
+	sign = 1;
+	result = 0;
+	while (str[i] == ' ' || (str[i] >= 9 && str[i] <= 13))
+		i++;
+	if (str[i] == '+' || str[i] == '-')
+	{
+		if (str[i] == '-')
+			sign = -1;
+		i++;
+	}
+	while (str[i] >= '0' && str[i] <= '9')
+	{
+		result = result * 10 + (str[i] - '0');
+		i++;
+	}
+	return (result * sign);
 }

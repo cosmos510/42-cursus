@@ -18,4 +18,4 @@ fi
 
 chown -R www-data:www-data /var/www/html
 
-php-fpm8.1 -F
+php-fpm7.4 -F

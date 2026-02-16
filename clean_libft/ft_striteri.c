@@ -1,23 +1,25 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
+/*   ft_striteri.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/06/06 11:40:15 by maximemarti       #+#    #+#             */
-/*   Updated: 2025/06/08 14:46:43 by maximemarti      ###   ########.fr       */
+/*   Created: 2024/10/04 16:32:22 by maximemarti       #+#    #+#             */
+/*   Updated: 2024/10/07 10:43:32 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Zombie.hpp"
+#include "libft.h"
 
-int main()
+void	ft_striteri(char *s, void (*f)(unsigned int, char*))
 {
-	int horde_size = 10;
-	Zombie *horde = zombieHorde(horde_size, "zombie horde");
-	for (int i = 0; i < horde_size; i++)
-		horde[i].announce();
-	delete[] horde;
-	return 0;
+	unsigned int	i;
+
+	i = 0;
+	while (s[i])
+	{
+		f(i, &s[i]);
+		i++;
+	}
 }
