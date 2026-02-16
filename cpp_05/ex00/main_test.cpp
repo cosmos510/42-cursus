@@ -11,76 +11,78 @@
 /* ************************************************************************** */
 
 #include "Bureaucrat.hpp"
-#include "Form.hpp"
 #include <iostream>
 
 int main() {
-	std::cout << "=== TEST 1: Valid form creation ===" << std::endl;
+	std::cout << "=== TEST 1: Valid bureaucrat ===" << std::endl;
 	try {
-		Form form("Tax Form", 50, 25);
-		std::cout << form << std::endl;
+		Bureaucrat bob("Bob", 75);
+		std::cout << bob << std::endl;
 	} catch (std::exception& e) {
 		std::cout << "Exception: " << e.what() << std::endl;
 	}
 
-	std::cout << "\n=== TEST 2: Form grade too high ===" << std::endl;
+	std::cout << "\n=== TEST 2: Grade too high (0) ===" << std::endl;
 	try {
-		Form invalid("Invalid", 0, 50);
+		Bureaucrat invalid("Invalid", 0);
+		std::cout << invalid << std::endl;
 	} catch (std::exception& e) {
 		std::cout << "Exception: " << e.what() << std::endl;
 	}
 
-	std::cout << "\n=== TEST 3: Form grade too low ===" << std::endl;
+	std::cout << "\n=== TEST 3: Grade too low (151) ===" << std::endl;
 	try {
-		Form invalid("Invalid", 50, 151);
+		Bureaucrat invalid("Invalid", 151);
+		std::cout << invalid << std::endl;
 	} catch (std::exception& e) {
 		std::cout << "Exception: " << e.what() << std::endl;
 	}
 
-	std::cout << "\n=== TEST 4: Successful signing ===" << std::endl;
+	std::cout << "\n=== TEST 4: Increment grade ===" << std::endl;
 	try {
-		Bureaucrat bob("Bob", 30);
-		Form form("Contract", 50, 25);
-		std::cout << form << std::endl;
-		bob.signForm(form);
-		std::cout << form << std::endl;
+		Bureaucrat alice("Alice", 2);
+		std::cout << alice << std::endl;
+		alice.incrementGrade();
+		std::cout << alice << std::endl;
+		alice.incrementGrade();
+		std::cout << alice << std::endl;
 	} catch (std::exception& e) {
 		std::cout << "Exception: " << e.what() << std::endl;
 	}
 
-	std::cout << "\n=== TEST 5: Failed signing (grade too low) ===" << std::endl;
+	std::cout << "\n=== TEST 5: Decrement grade ===" << std::endl;
 	try {
-		Bureaucrat intern("Intern", 100);
-		Form form("Top Secret", 50, 25);
-		std::cout << form << std::endl;
-		intern.signForm(form);
-		std::cout << form << std::endl;
+		Bureaucrat charlie("Charlie", 149);
+		std::cout << charlie << std::endl;
+		charlie.decrementGrade();
+		std::cout << charlie << std::endl;
+		charlie.decrementGrade();
+		std::cout << charlie << std::endl;
 	} catch (std::exception& e) {
 		std::cout << "Exception: " << e.what() << std::endl;
 	}
 
-	std::cout << "\n=== TEST 6: Sign already signed form ===" << std::endl;
-	try {
-		Bureaucrat alice("Alice", 1);
-		Form form("Document", 50, 25);
-		alice.signForm(form);
-		alice.signForm(form);
-	} catch (std::exception& e) {
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
-
-	std::cout << "\n=== TEST 7: Copy constructor ===" << std::endl;
+	std::cout << "\n=== TEST 6: Copy constructor ===" << std::endl;
 	{
-		Form original("Original", 50, 25);
-		Form copy(original);
+		Bureaucrat original("Original", 50);
+		Bureaucrat copy(original);
 		std::cout << "Original: " << original << std::endl;
 		std::cout << "Copy: " << copy << std::endl;
 	}
 
+	std::cout << "\n=== TEST 7: Assignment operator ===" << std::endl;
+	{
+		Bureaucrat a("A", 10);
+		Bureaucrat b("B", 100);
+		std::cout << "Before: " << a << " | " << b << std::endl;
+		b = a;
+		std::cout << "After: " << a << " | " << b << std::endl;
+	}
+
 	std::cout << "\n=== TEST 8: Boundary values ===" << std::endl;
 	try {
-		Form highest("Highest", 1, 1);
-		Form lowest("Lowest", 150, 150);
+		Bureaucrat highest("Highest", 1);
+		Bureaucrat lowest("Lowest", 150);
 		std::cout << highest << std::endl;
 		std::cout << lowest << std::endl;
 	} catch (std::exception& e) {
