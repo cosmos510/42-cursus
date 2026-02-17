@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ScalarConverter_modular.cpp                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/02/17 12:52:26 by maximemarti       #+#    #+#             */
+/*   Updated: 2026/02/17 12:52:27 by maximemarti      ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "ScalarConverter.hpp"
 #include "TypeDetector.hpp"
 #include "Printer.hpp"
@@ -14,10 +26,7 @@ void ScalarConverter::convert(const std::string& literal) {
     double value;
 
     if (isChar(literal)) {
-        if (literal.length() == 3)
-            value = static_cast<double>(literal[1]);
-        else
-            value = static_cast<double>(literal[0]);
+        value = static_cast<double>(literal[1]);
         printAll(value);
         return;
     }

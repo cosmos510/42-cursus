@@ -5,8 +5,8 @@
 #                                                     +:+ +:+         +:+      #
 #    By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2026/02/16 08:48:46 by maximemarti       #+#    #+#              #
-#    Updated: 2026/02/16 08:48:47 by maximemarti      ###   ########.fr        #
+#    Created: 2026/02/17 12:49:04 by maximemarti       #+#    #+#              #
+#    Updated: 2026/02/17 12:49:05 by maximemarti      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,7 +15,7 @@ NAME = convert
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 
-SRCS = main.cpp ScalarConverter.cpp
+SRCS = main.cpp ScalarConverter.cpp TypeDetector.cpp Printer.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 all: $(NAME)
