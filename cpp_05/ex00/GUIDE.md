@@ -1,279 +1,406 @@
-# CPP Module 05 - Exercise 00: Bureaucrat
-## Guide de Compréhension
+# 📚 Exercise 00: Bureaucrat - Exceptions
+
+## 🎯 Objectif
+Créer une classe **Bureaucrat** avec gestion des grades et **exceptions personnalisées**
 
 ---
 
-## 📋 Objectif
-Créer une classe `Bureaucrat` avec un système de grades (1 à 150) et des exceptions personnalisées.
+## 🤔 C'est quoi une EXCEPTION ?
 
----
+### Analogie : Le feu rouge 🚦
 
-## 🏗️ Structure de la Classe
+Imagine que tu conduis une voiture :
+- **Sans exception** : tu fonces dans le mur et le programme crash 💥
+- **Avec exception** : tu vois le feu rouge, tu freines, tu gères le problème ✅
 
-### Attributs Privés
+**Exception = signal d'alarme qui dit "STOP, il y a un problème !"**
+
+### Sans exception (crash 💥)
+
 ```cpp
-const std::string _name;  // Nom constant (ne peut pas changer)
-int _grade;               // Grade (1 = meilleur, 150 = pire)
+void setGrade(int grade) {
+    _grade = grade;  // Et si grade = 0 ou 200 ? 💥 Comportement indéfini
+}
+```
+
+### Avec exception (gestion ✅)
+
+```cpp
+void setGrade(int grade) {
+    if (grade < 1)
+        throw GradeTooHighException();  // 🚨 Alarme !
+    if (grade > 150)
+        throw GradeTooLowException();   // 🚨 Alarme !
+    _grade = grade;
+}
 ```
 
 ---
 
-## 🔧 Orthodox Canonical Form (OCF)
+## 📝 Ce qu'il faut faire
 
-### 1. Default Constructor
-```cpp
-Bureaucrat();
-```
-- Crée un bureaucrate avec des valeurs par défaut
-- Exemple: nom = "Default", grade = 150
+### Fichiers requis
+- `Bureaucrat.hpp` : déclaration de la classe
+- `Bureaucrat.cpp` : implémentation
+- `main.cpp` : tests
+- `Makefile`
 
-### 2. Parametrized Constructor
-```cpp
-Bureaucrat(const std::string& name, int grade);
-```
-- Crée un bureaucrate avec nom et grade spécifiques
-- **DOIT** vérifier que le grade est entre 1 et 150
-- Lance une exception si invalide
+### Structure de la classe
 
-### 3. Copy Constructor
 ```cpp
-Bureaucrat(const Bureaucrat& other);
-```
-- Crée une copie d'un bureaucrate existant
-- Copie le nom (const) et le grade
+class Bureaucrat {
+private:
+    const std::string _name;  // Nom (constant)
+    int _grade;               // Grade (1 = meilleur, 150 = pire)
 
-### 4. Copy Assignment Operator
-```cpp
-Bureaucrat& operator=(const Bureaucrat& other);
+public:
+    Bureaucrat(const std::string& name, int grade);
+    // ... constructeurs, destructeur, etc.
+    
+    void incrementGrade();  // Grade-- (devient meilleur)
+    void decrementGrade();  // Grade++ (devient pire)
+    
+    // Exceptions personnalisées
+    class GradeTooHighException : public std::exception {};
+    class GradeTooLowException : public std::exception {};
+};
 ```
-- Assigne les valeurs d'un bureaucrate à un autre
-- **NE PEUT PAS** copier `_name` (const)
-- Copie seulement `_grade`
-- Retourne `*this` pour permettre les chaînages
-
-### 5. Destructor
-```cpp
-~Bureaucrat();
-```
-- Nettoie les ressources (rien à faire ici)
 
 ---
 
-## 📖 Getters
+## 💻 Implémentation détaillée
 
-### getName()
+### 1. Attributs
+
 ```cpp
-const std::string& getName() const;
+private:
+    const std::string _name;  // const = ne peut pas changer
+    int _grade;               // 1 à 150
 ```
-- Retourne une référence constante au nom
-- `const` à la fin = ne modifie pas l'objet
 
-### getGrade()
+**Pourquoi const ?**
+- Un bureaucrate ne change pas de nom !
+- Mais son grade peut changer (promotion/rétrogradation)
+
+### 2. Constructeur avec validation
+
 ```cpp
-int getGrade() const;
+Bureaucrat::Bureaucrat(const std::string& name, int grade) 
+    : _name(name), _grade(grade) {
+    if (grade < 1)
+        throw GradeTooHighException();
+    if (grade > 150)
+        throw GradeTooLowException();
+}
 ```
-- Retourne le grade actuel
-- `const` = ne modifie pas l'objet
 
----
+**Décortiquons :**
 
-## 🎯 Member Functions
-
-### incrementGrade()
 ```cpp
-void incrementGrade();
+: _name(name), _grade(grade)
+// Liste d'initialisation (obligatoire pour const)
 ```
-- **ATTENTION**: Incrémenter = diminuer le nombre (3 → 2)
-- Grade 1 est le MEILLEUR
-- Si grade = 1, lance `GradeTooHighException`
 
-### decrementGrade()
 ```cpp
-void decrementGrade();
+if (grade < 1)
+    throw GradeTooHighException();
+// Si grade trop bon (< 1), lance une exception
 ```
-- **ATTENTION**: Décrémenter = augmenter le nombre (3 → 4)
-- Grade 150 est le PIRE
-- Si grade = 150, lance `GradeTooLowException`
 
----
+**Exemple concret :**
 
-## ⚠️ Exceptions Personnalisées
+```cpp
+try {
+    Bureaucrat bob("Bob", 0);  // Grade invalide !
+} catch (std::exception& e) {
+    std::cout << "Erreur : " << e.what();  // "Grade is too high!"
+}
+```
 
-### GradeTooHighException
+### 3. incrementGrade() - Promotion
+
+```cpp
+void Bureaucrat::incrementGrade() {
+    if (_grade - 1 < 1)
+        throw GradeTooHighException();
+    _grade--;  // Grade diminue = devient meilleur
+}
+```
+
+**⚠️ ATTENTION : Incrémenter = diminuer le nombre !**
+
+```
+Grade 2 → incrementGrade() → Grade 1 (meilleur)
+Grade 1 → incrementGrade() → Exception ! (déjà au max)
+```
+
+**Exemple :**
+
+```cpp
+Bureaucrat alice("Alice", 2);
+alice.incrementGrade();  // Grade = 1 ✅
+alice.incrementGrade();  // Exception ! ❌
+```
+
+### 4. decrementGrade() - Rétrogradation
+
+```cpp
+void Bureaucrat::decrementGrade() {
+    if (_grade + 1 > 150)
+        throw GradeTooLowException();
+    _grade++;  // Grade augmente = devient pire
+}
+```
+
+**Exemple :**
+
+```cpp
+Bureaucrat charlie("Charlie", 149);
+charlie.decrementGrade();  // Grade = 150 ✅
+charlie.decrementGrade();  // Exception ! ❌
+```
+
+### 5. Exceptions personnalisées
+
 ```cpp
 class GradeTooHighException : public std::exception {
 public:
-    virtual const char* what() const throw();
+    virtual const char* what() const throw() {
+        return "Grade is too high!";
+    }
 };
-```
-- Lancée quand grade < 1
-- Hérite de `std::exception`
-- `what()` retourne un message d'erreur
 
-### GradeTooLowException
-```cpp
 class GradeTooLowException : public std::exception {
 public:
-    virtual const char* what() const throw();
+    virtual const char* what() const throw() {
+        return "Grade is too low!";
+    }
 };
 ```
-- Lancée quand grade > 150
-- Hérite de `std::exception`
-- `what()` retourne un message d'erreur
 
----
-
-## 🖨️ Overload de l'Opérateur <<
+**Décortiquons :**
 
 ```cpp
-std::ostream& operator<<(std::ostream& os, const Bureaucrat& b);
+: public std::exception
+// Hérite de std::exception (classe de base)
 ```
 
-### Format de sortie:
-```
-<name>, bureaucrat grade <grade>
-```
-
-### Exemple:
 ```cpp
-Bureaucrat bob("Bob", 75);
-std::cout << bob << std::endl;
-// Affiche: Bob, bureaucrat grade 75
+virtual const char* what() const throw()
+// Fonction qui retourne le message d'erreur
+// throw() = ne lance pas d'exception (C++98)
 ```
 
-### Pourquoi en dehors de la classe?
-- L'opérateur << doit avoir `std::ostream` comme premier paramètre
-- Ne peut pas être une méthode membre
+### 6. Opérateur << (affichage)
 
----
-
-## 🧪 Utilisation et Tests
-
-### Création valide
 ```cpp
-Bureaucrat bob("Bob", 75);
-std::cout << bob << std::endl;
-// Bob, bureaucrat grade 75
-```
-
-### Création invalide (grade trop haut)
-```cpp
-try {
-    Bureaucrat invalid("Invalid", 0);
-} catch (std::exception& e) {
-    std::cout << e.what() << std::endl;
-    // Grade is too high!
+std::ostream& operator<<(std::ostream& os, const Bureaucrat& b) {
+    os << b.getName() << ", bureaucrat grade " << b.getGrade();
+    return os;
 }
 ```
 
-### Création invalide (grade trop bas)
+**Utilisation :**
+
+```cpp
+Bureaucrat bob("Bob", 75);
+std::cout << bob << std::endl;
+// Affiche : "Bob, bureaucrat grade 75"
+```
+
+---
+
+## 🧪 Tests importants
+
+### Test 1: Création valide
+
 ```cpp
 try {
-    Bureaucrat invalid("Invalid", 151);
+    Bureaucrat bob("Bob", 75);
+    std::cout << bob << std::endl;  // OK
 } catch (std::exception& e) {
     std::cout << e.what() << std::endl;
-    // Grade is too low!
 }
 ```
 
-### Incrémenter le grade
+### Test 2: Grade trop haut (0)
+
 ```cpp
-Bureaucrat alice("Alice", 3);
-std::cout << alice << std::endl;  // Alice, bureaucrat grade 3
-alice.incrementGrade();
-std::cout << alice << std::endl;  // Alice, bureaucrat grade 2
-alice.incrementGrade();
-std::cout << alice << std::endl;  // Alice, bureaucrat grade 1
-alice.incrementGrade();           // Exception!
+try {
+    Bureaucrat invalid("Invalid", 0);  // ❌ Exception
+} catch (std::exception& e) {
+    std::cout << e.what();  // "Grade is too high!"
+}
 ```
 
-### Décrémenter le grade
+### Test 3: Grade trop bas (151)
+
 ```cpp
-Bureaucrat charlie("Charlie", 148);
-std::cout << charlie << std::endl;  // Charlie, bureaucrat grade 148
-charlie.decrementGrade();
-std::cout << charlie << std::endl;  // Charlie, bureaucrat grade 149
-charlie.decrementGrade();
-std::cout << charlie << std::endl;  // Charlie, bureaucrat grade 150
-charlie.decrementGrade();           // Exception!
+try {
+    Bureaucrat invalid("Invalid", 151);  // ❌ Exception
+} catch (std::exception& e) {
+    std::cout << e.what();  // "Grade is too low!"
+}
+```
+
+### Test 4: Incrémenter au maximum
+
+```cpp
+try {
+    Bureaucrat alice("Alice", 2);
+    alice.incrementGrade();  // Grade = 1 ✅
+    alice.incrementGrade();  // ❌ Exception
+} catch (std::exception& e) {
+    std::cout << e.what();
+}
+```
+
+### Test 5: Décrémenter au minimum
+
+```cpp
+try {
+    Bureaucrat charlie("Charlie", 149);
+    charlie.decrementGrade();  // Grade = 150 ✅
+    charlie.decrementGrade();  // ❌ Exception
+} catch (std::exception& e) {
+    std::cout << e.what();
+}
 ```
 
 ---
 
-## 🎓 Concepts Clés à Comprendre
+## ⚠️ Pièges à éviter
 
-### 1. Grades inversés
-- Grade 1 = MEILLEUR (président)
-- Grade 150 = PIRE (stagiaire)
-- Incrémenter = améliorer = diminuer le nombre
-- Décrémenter = empirer = augmenter le nombre
+### 1. Confondre increment et decrement
 
-### 2. Attributs const
-- `const std::string _name` ne peut JAMAIS changer
-- Initialisé dans la liste d'initialisation du constructeur
-- Ne peut pas être réassigné dans l'opérateur d'assignation
+```cpp
+// ❌ MAUVAIS
+void incrementGrade() {
+    _grade++;  // Grade augmente = devient PIRE !
+}
 
-### 3. Exceptions
-- Utilisées pour gérer les erreurs
-- `throw` lance une exception
-- `try/catch` attrape les exceptions
-- Héritent de `std::exception`
+// ✅ BON
+void incrementGrade() {
+    _grade--;  // Grade diminue = devient MEILLEUR !
+}
+```
 
-### 4. const correctness
-- Méthodes `const` = ne modifient pas l'objet
-- Getters doivent être `const`
-- Permet d'utiliser avec des objets constants
+### 2. Oublier de vérifier AVANT de modifier
 
-### 5. Références
-- `const std::string&` = référence constante (pas de copie)
-- Plus efficace que passer par valeur
-- Empêche la modification
+```cpp
+// ❌ MAUVAIS
+void incrementGrade() {
+    _grade--;
+    if (_grade < 1)  // Trop tard ! Déjà modifié !
+        throw GradeTooHighException();
+}
 
----
+// ✅ BON
+void incrementGrade() {
+    if (_grade - 1 < 1)  // Vérifie AVANT
+        throw GradeTooHighException();
+    _grade--;
+}
+```
 
-## 📝 Checklist de Validation
+### 3. Oublier throw() dans what()
 
-✅ Classe Bureaucrat avec nom constant et grade  
-✅ Orthodox Canonical Form complet (4 fonctions + destructeur)  
-✅ Getters getName() et getGrade()  
-✅ incrementGrade() et decrementGrade()  
-✅ Exceptions GradeTooHighException et GradeTooLowException  
-✅ Validation des grades dans le constructeur  
-✅ Validation des grades dans increment/decrement  
-✅ Overload de l'opérateur <<  
-✅ Tests complets dans main.cpp  
-✅ Compilation avec -Wall -Wextra -Werror -std=c++98  
-✅ Pas de fuites mémoire  
+```cpp
+// ❌ MAUVAIS (C++98)
+virtual const char* what() const {
+    return "Error";
+}
 
----
-
-## 🚨 Erreurs Courantes à Éviter
-
-1. **Confondre increment/decrement**
-   - ❌ incrementGrade() fait `_grade++`
-   - ✅ incrementGrade() fait `_grade--`
-
-2. **Oublier de valider dans le constructeur**
-   - ❌ Créer un bureaucrate avec grade 200
-   - ✅ Lancer une exception
-
-3. **Modifier _name dans operator=**
-   - ❌ `_name = other._name;` (erreur de compilation)
-   - ✅ Ne copier que `_grade`
-
-4. **Oublier const dans les getters**
-   - ❌ `int getGrade();`
-   - ✅ `int getGrade() const;`
-
-5. **Mauvais format d'affichage**
-   - ❌ "Bob grade 75"
-   - ✅ "Bob, bureaucrat grade 75"
+// ✅ BON (C++98)
+virtual const char* what() const throw() {
+    return "Error";
+}
+```
 
 ---
 
-## 💡 Points Bonus
+## 🎓 Concepts clés
 
-- Les exceptions sont des classes imbriquées (nested classes)
-- `throw()` dans `what()` indique qu'elle ne lance pas d'exception
-- `virtual` permet le polymorphisme avec std::exception
-- L'opérateur << retourne `std::ostream&` pour permettre le chaînage
+### Exception
+
+**Lancer une exception :**
+```cpp
+throw GradeTooHighException();
+```
+
+**Attraper une exception :**
+```cpp
+try {
+    // Code qui peut lancer une exception
+} catch (std::exception& e) {
+    // Gestion de l'erreur
+    std::cout << e.what();
+}
+```
+
+### Hiérarchie des exceptions
+
+```
+std::exception (classe de base)
+    ↑
+    |
+GradeTooHighException (notre classe)
+```
+
+### const dans les attributs
+
+```cpp
+const std::string _name;  // Ne peut pas changer
+```
+
+**Conséquence :** doit être initialisé dans la liste d'initialisation :
+
+```cpp
+Bureaucrat::Bureaucrat(const std::string& name, int grade)
+    : _name(name), _grade(grade) {  // ← Liste d'initialisation
+}
+```
+
+### Grades : logique inversée
+
+```
+1   = Meilleur grade (PDG)
+75  = Grade moyen
+150 = Pire grade (stagiaire)
+
+incrementGrade() → grade--  (devient meilleur)
+decrementGrade() → grade++  (devient pire)
+```
+
+---
+
+## 💡 Résumé
+
+### Checklist
+
+- [ ] Attribut `_name` const
+- [ ] Attribut `_grade` (1-150)
+- [ ] Constructeur avec validation
+- [ ] incrementGrade() avec vérification
+- [ ] decrementGrade() avec vérification
+- [ ] 2 exceptions personnalisées
+- [ ] Fonction what() avec throw()
+- [ ] Opérateur << pour affichage
+- [ ] Forme canonique orthodoxe
+
+### Syntaxe clé
+
+```cpp
+throw Exception();              // Lance une exception
+try { } catch (Type& e) { }    // Attrape une exception
+: public std::exception         // Hérite de std::exception
+virtual const char* what() const throw()  // Message d'erreur
+const std::string _name         // Attribut constant
+```
+
+### Points importants
+
+✅ **Valider dans le constructeur** : empêche la création d'objets invalides
+✅ **Vérifier AVANT de modifier** : évite les états incohérents
+✅ **increment = grade--** : logique inversée !
+✅ **Hériter de std::exception** : standard C++

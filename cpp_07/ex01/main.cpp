@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/16 09:13:44 by maximemarti       #+#    #+#             */
-/*   Updated: 2026/02/17 16:41:37 by maximemarti      ###   ########.fr       */
+/*   Updated: 2026/02/17 17:11:20 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,11 @@ void increment(T& x) {
 template<typename T>
 void square(T& x) {
 	x = x * x;
+}
+
+template<typename T>
+void plus_one(T& x) {
+	x = x + 1;
 }
 
 int main() {
@@ -79,6 +84,11 @@ int main() {
 		iter(arr, 5, square<int>);
 		std::cout << "After: ";
 		iter(arr, 5, print<int>);
+		std::cout << std::endl;
+		iter(arr, 5, plus_one<int>);
+		std::cout << "After plus one: ";
+		iter(arr, 5, print<int>);
+		
 		std::cout << std::endl;
 	}
 

@@ -46,15 +46,22 @@ public:
 		delete[] _data;
 	}
 
+	class OutOfBoundsException : public std::exception {
+	public:
+		virtual const char* what() const throw() {
+			return "Index is out of bounds";
+		}
+	};
+
 	T& operator[](unsigned int index) {
 		if (index >= _size)
-			throw std::exception();
+			throw OutOfBoundsException();
 		return _data[index];
 	}
 
 	const T& operator[](unsigned int index) const {
 		if (index >= _size)
-			throw std::exception();
+			throw OutOfBoundsException();
 		return _data[index];
 	}
 
