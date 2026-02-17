@@ -14,10 +14,6 @@ for ex in ex00 ex01 ex02; do
         echo -e "\n${GREEN}=== Testing $ex ===${NC}"
         cd "$ex"
         
-        if [ -f "main_test.cpp" ]; then
-            [ -f "main.cpp" ] && mv main.cpp main.cpp.bak
-            cp main_test.cpp main.cpp
-        fi
         
         make re > /dev/null 2>&1
         
@@ -35,7 +31,6 @@ for ex in ex00 ex01 ex02; do
             echo -e "${RED}Compilation failed${NC}"
         fi
         
-        [ -f "main.cpp.bak" ] && mv main.cpp.bak main.cpp
         make fclean > /dev/null 2>&1
         cd ..
     fi

@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/16 09:13:44 by maximemarti       #+#    #+#             */
-/*   Updated: 2026/02/16 09:13:45 by maximemarti      ###   ########.fr       */
+/*   Updated: 2026/02/17 16:41:37 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 #include <string>
 
 template<typename T>
-void print(T const & x) {
+void print(T& x) {
 	std::cout << x << " ";
 }
 
@@ -24,41 +24,71 @@ void increment(T& x) {
 	x++;
 }
 
-void toUpper(char& c) {
-	if (c >= 'a' && c <= 'z')
-		c -= 32;
+template<typename T>
+void square(T& x) {
+	x = x * x;
 }
 
 int main() {
-	std::cout << "=== Test 1: Print int array ===" << std::endl;
-	int intArray[] = {1, 2, 3, 4, 5};
-	iter(intArray, 5, print<int>);
-	std::cout << std::endl;
+	std::cout << "=== TEST 1: Int array with print ===" << std::endl;
+	{
+		int arr[] = {1, 2, 3, 4, 5};
+		iter(arr, 5, print<int>);
+		std::cout << std::endl;
+	}
 
-	std::cout << "\n=== Test 2: Increment int array ===" << std::endl;
-	iter(intArray, 5, increment<int>);
-	iter(intArray, 5, print<int>);
-	std::cout << std::endl;
+	std::cout << "\n=== TEST 2: Int array with increment ===" << std::endl;
+	{
+		int arr[] = {1, 2, 3, 4, 5};
+		std::cout << "Before: ";
+		iter(arr, 5, print<int>);
+		std::cout << std::endl;
+		iter(arr, 5, increment<int>);
+		std::cout << "After: ";
+		iter(arr, 5, print<int>);
+		std::cout << std::endl;
+	}
 
-	std::cout << "\n=== Test 3: Print string array ===" << std::endl;
-	std::string strArray[] = {"Hello", "World", "Test"};
-	iter(strArray, 3, print<std::string>);
-	std::cout << std::endl;
+	std::cout << "\n=== TEST 3: String array ===" << std::endl;
+	{
+		std::string arr[] = {"Hello", "World", "42"};
+		iter(arr, 3, print<std::string>);
+		std::cout << std::endl;
+	}
 
-	std::cout << "\n=== Test 4: Print char array ===" << std::endl;
-	char charArray[] = {'a', 'b', 'c', 'd', 'e'};
-	iter(charArray, 5, print<char>);
-	std::cout << std::endl;
+	std::cout << "\n=== TEST 4: Float array ===" << std::endl;
+	{
+		float arr[] = {1.1f, 2.2f, 3.3f, 4.4f};
+		iter(arr, 4, print<float>);
+		std::cout << std::endl;
+	}
 
-	std::cout << "\n=== Test 5: Convert to uppercase ===" << std::endl;
-	iter(charArray, 5, toUpper);
-	iter(charArray, 5, print<char>);
-	std::cout << std::endl;
+	std::cout << "\n=== TEST 5: Empty array ===" << std::endl;
+	{
+		int arr[] = {1};
+		iter(arr, 0, print<int>);
+		std::cout << "(nothing printed)" << std::endl;
+	}
 
-	std::cout << "\n=== Test 6: Print double array ===" << std::endl;
-	double doubleArray[] = {1.1, 2.2, 3.3, 4.4};
-	iter(doubleArray, 4, print<double>);
-	std::cout << std::endl;
+	std::cout << "\n=== TEST 6: Square function ===" << std::endl;
+	{
+		int arr[] = {1, 2, 3, 4, 5};
+		std::cout << "Before: ";
+		iter(arr, 5, print<int>);
+		std::cout << std::endl;
+		iter(arr, 5, square<int>);
+		std::cout << "After: ";
+		iter(arr, 5, print<int>);
+		std::cout << std::endl;
+	}
+
+	std::cout << "\n=== TEST 7: Char array ===" << std::endl;
+	{
+		char arr[] = {'a', 'b', 'c', 'd', 'e'};
+		iter(arr, 5, print<char>);
+		std::cout << std::endl;
+	}
 
 	return 0;
 }
+
