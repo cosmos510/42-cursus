@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/16 08:59:24 by maximemarti       #+#    #+#             */
-/*   Updated: 2026/02/16 08:59:25 by maximemarti      ###   ########.fr       */
+/*   Updated: 2026/02/19 10:18:38 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,13 @@ int main() {
 	std::cout << "  Address: " << deserialized << std::endl;
 	std::cout << "  Value: " << deserialized->value << std::endl;
 	std::cout << "  Name: " << deserialized->name << std::endl;
+
+	deserialized->value = 100;
+	deserialized->name = "Modified";
+	std::cout << "\nModified through deserialized pointer:" << std::endl;
+	std::cout << "  Original value: " << original.value << std::endl;
+	std::cout << "  Original name: " << original.name << std::endl;
+
 
 	std::cout << "\nPointers equal: " << (deserialized == &original ? "YES" : "NO") << std::endl;
 

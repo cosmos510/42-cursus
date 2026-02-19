@@ -14,6 +14,8 @@
 #include <algorithm>
 #include <limits>
 
+Span::Span() : _maxSize(0) {}
+
 Span::Span(unsigned int n) : _maxSize(n) {}
 
 Span::Span(const Span& other) : _maxSize(other._maxSize), _numbers(other._numbers) {}

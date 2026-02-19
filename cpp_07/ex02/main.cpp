@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/16 09:18:22 by maximemarti       #+#    #+#             */
-/*   Updated: 2026/02/17 17:24:04 by maximemarti      ###   ########.fr       */
+/*   Updated: 2026/02/19 11:00:33 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,19 @@
 #include <string>
 #include <cstdlib>
 #include <ctime>
+
+class Person {
+public:
+	std::string name;
+	int age;
+	Person() : name(""), age(0) {}
+	Person(std::string n, int a) : name(n), age(a) {}
+};
+
+struct Point {
+	int x;
+	int y;
+};
 
 int main() {
 	std::cout << "=== TEST 1: Empty array ==="<< std::endl;
@@ -106,9 +119,6 @@ int main() {
 		arr[0] = 1;
 		arr[1] = 2;
 		arr[2] = 3;
-		
-		// Self-assignment (arr = arr) triggers compiler warning
-		// Testing with a reference instead
 		Array<int>& ref = arr;
 		arr = ref;
 		std::cout << "After self-assignment: ";
@@ -231,6 +241,40 @@ int main() {
 		for (unsigned int i = 0; i < arr.size(); i++)
 			std::cout << arr[i] << " ";
 		std::cout << std::endl;
+	}
+
+	std::cout << "\n=== TEST15: Const prevents modification ===" << std::endl;
+	{
+		Array<int> arr(3);
+		arr[0] = 42;
+		
+		const Array<int>& constArr = arr;
+		std::cout << constArr[0]<< std::endl;
+		// constArr[0] = 99;
+	}
+
+	std::cout << "\n=== TEST 16: Complex type - Person class ==="<< std::endl;
+	{
+		Array<Person> people(3);
+		people[0] = Person("Alice", 25);
+		people[1] = Person("Bob", 30);
+		people[2] = Person("Charlie", 35);
+		
+		std::cout << "People array:" << std::endl;
+		for (unsigned int i = 0; i < people.size(); i++)
+			std::cout << "  " << people[i].name << ", age " << people[i].age << std::endl;
+	}
+
+	std::cout << "\n=== TEST 17: Complex type - Point struct ==="<< std::endl;
+	{
+		Array<Point> points(3);
+		points[0].x = 10; points[0].y = 20;
+		points[1].x = 30; points[1].y = 40;
+		points[2].x = 50; points[2].y = 60;
+		
+		std::cout << "Points array:" << std::endl;
+		for (unsigned int i = 0; i < points.size(); i++)
+			std::cout << "  Point(" << points[i].x << ", " << points[i].y << ")" << std::endl;
 	}
 
 	std::cout << "\n=== All tests completed ==="<< std::endl;
