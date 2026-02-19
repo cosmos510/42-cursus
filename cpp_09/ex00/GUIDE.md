@@ -405,3 +405,32 @@ make
 - `man std::map`
 - `man std::lower_bound`
 - cppreference.com/w/cpp/container/map
+
+
+
+Réponse complète à donner pendant l'évaluation :
+
+👉 "J'ai choisi std::map parce que :
+
+Avantages :
+Tri automatique par date (clé = string)
+
+lower_bound() pour trouver la date inférieure la plus proche
+
+Recherche rapide en O(log n)
+
+Pas de doublons (une date = un prix)
+
+Pourquoi PAS les autres conteneurs :
+
+❌ std::vector : Pas trié automatiquement, pas de lower_bound efficace, il faudrait trier manuellement
+
+❌ std::list : Pas de recherche rapide, pas de lower_bound, O(n) pour tout
+
+❌ std::set : Stocke seulement des clés, pas de paires clé-valeur (date → prix)
+
+❌ std::multimap : Permet des doublons (pas nécessaire, une date = un prix unique)
+
+❌ std::deque : Comme vector, pas trié automatiquement
+
+✅ std::map : Parfait pour associer dates → prix avec recherche rapide et tri automatique."

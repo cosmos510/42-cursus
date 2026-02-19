@@ -360,3 +360,23 @@ make
 - Notation polonaise inverse (Wikipedia)
 - std::stack documentation
 - cppreference.com/w/cpp/container/stack
+
+3. Pourquoi std::stack ?
+
+Réponse à donner :
+
+👉 "J'ai choisi std::stack parce que :
+
+LIFO (Last In, First Out) = parfait pour RPN
+
+Empiler les nombres, dépiler pour calculer
+
+Interface simple : push/pop/top
+
+Pourquoi PAS les autres :
+
+❌ std::vector : Accès par index pas nécessaire
+
+❌ std::queue : FIFO (inverse de ce qu'on veut)
+
+❌ std::map : Déjà utilisé en ex00 (interdit)"
