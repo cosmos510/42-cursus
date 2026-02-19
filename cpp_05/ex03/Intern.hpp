@@ -19,6 +19,11 @@
 #include "PresidentialPardonForm.hpp"
 
 class Intern {
+private:
+	AForm* makeShrubberyCreation(const std::string& target);
+	AForm* makeRobotomyRequest(const std::string& target);
+	AForm* makePresidentialPardon(const std::string& target);
+
 public:
 	Intern();
 	Intern(const Intern& other);
@@ -26,6 +31,11 @@ public:
 	~Intern();
 
 	AForm* makeForm(const std::string& formName, const std::string& target);
+
+	class UnknownFormException : public std::exception {
+	public:
+		virtual const char* what() const throw();
+	};
 };
 
 #endif

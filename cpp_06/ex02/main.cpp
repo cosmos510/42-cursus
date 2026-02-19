@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/16 09:03:48 by maximemarti       #+#    #+#             */
-/*   Updated: 2026/02/17 12:51:45 by maximemarti      ###   ########.fr       */
+/*   Updated: 2026/02/18 12:11:48 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,6 +76,20 @@ int main() {
 			std::cout << "Base[" << i << "] by reference: ";
 			identify(*bases[i]);
 			delete bases[i];
+		}
+	}
+
+	std::cout << "\n=== TEST 5: Bad cast with reference (exception) ===" << std::endl;
+	{
+		A a;
+		Base& baseRef = a;
+		std::cout << "Trying to cast A to B (should throw): ";
+		try {
+			B& b = dynamic_cast<B&>(baseRef);
+			(void)b;
+			std::cout << "Success (shouldn't happen)" << std::endl;
+		} catch (std::bad_cast& e) {
+			std::cout << "Exception caught: " << e.what() << std::endl;
 		}
 	}
 

@@ -60,25 +60,23 @@ int main() {
 
 	std::cout << "\n=== Test 4: Invalid form name ===" << std::endl;
 	{
-		AForm* invalid;
-		invalid = someRandomIntern.makeForm("invalid form", "target");
-		if (invalid) {
+		try {
+			AForm* invalid = someRandomIntern.makeForm("invalid form", "target");
 			std::cout << *invalid << std::endl;
 			delete invalid;
-		} else {
-			std::cout << "Form creation failed as expected" << std::endl;
+		} catch (std::exception& e) {
+			std::cout << "Exception: " << e.what() << std::endl;
 		}
 	}
 
 	std::cout << "\n=== Test 5: Another invalid form ===" << std::endl;
 	{
-		AForm* invalid2;
-		invalid2 = someRandomIntern.makeForm("tax evasion", "target");
-		if (invalid2) {
+		try {
+			AForm* invalid2 = someRandomIntern.makeForm("tax evasion", "target");
 			std::cout << *invalid2 << std::endl;
 			delete invalid2;
-		} else {
-			std::cout << "Form creation failed as expected" << std::endl;
+		} catch (std::exception& e) {
+			std::cout << "Exception: " << e.what() << std::endl;
 		}
 	}
 

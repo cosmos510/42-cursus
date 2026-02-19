@@ -14,8 +14,14 @@
 #define RPN_HPP
 
 #include <string>
+#include <stack>
 
 class RPN {
+private:
+    bool isOperator(const std::string& token);
+    bool isNumber(const std::string& token);
+    void applyOperator(std::stack<int>& stack, char op);
+    
 public:
     RPN();
     RPN(const RPN& other);

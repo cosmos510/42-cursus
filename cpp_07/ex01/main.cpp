@@ -6,7 +6,7 @@
 /*   By: maximemartin <maximemartin@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/16 09:13:44 by maximemarti       #+#    #+#             */
-/*   Updated: 2026/02/17 17:11:20 by maximemarti      ###   ########.fr       */
+/*   Updated: 2026/02/18 12:22:21 by maximemarti      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,11 @@
 
 template<typename T>
 void print(T& x) {
+	std::cout << x << " ";
+}
+
+template<typename T>
+void printConst(const T& x) {
 	std::cout << x << " ";
 }
 
@@ -30,8 +35,8 @@ void square(T& x) {
 }
 
 template<typename T>
-void plus_one(T& x) {
-	x = x + 1;
+void plus_two(T& x) {
+	x = x + 2;
 }
 
 int main() {
@@ -85,8 +90,8 @@ int main() {
 		std::cout << "After: ";
 		iter(arr, 5, print<int>);
 		std::cout << std::endl;
-		iter(arr, 5, plus_one<int>);
-		std::cout << "After plus one: ";
+		iter(arr, 5, plus_two<int>);
+		std::cout << "After plus two: ";
 		iter(arr, 5, print<int>);
 		
 		std::cout << std::endl;
@@ -96,6 +101,36 @@ int main() {
 	{
 		char arr[] = {'a', 'b', 'c', 'd', 'e'};
 		iter(arr, 5, print<char>);
+		std::cout << std::endl;
+	}
+
+	std::cout << "\n=== TEST 8: Plus two on char array ===" << std::endl;
+	{
+		char arr[] = {'a', 'b', 'c', 'd', 'e'};
+		std::cout << "Before: ";
+		iter(arr, 5, print<char>);
+		std::cout << std::endl;
+		iter(arr, 5, plus_two<char>);
+		std::cout << "After: ";
+		iter(arr, 5, print<char>);
+		std::cout << std::endl;
+	}
+
+	std::cout << "\n=== TEST 9: Const reference vs non-const reference ===" << std::endl;
+	{
+		int arr[] = {10, 20, 30, 40, 50};
+		std::cout << "With const reference (read-only): ";
+		iter(arr, 5, printConst<int>);
+		std::cout << std::endl;
+		
+		std::cout << "With non-const reference (can modify): ";
+		iter(arr, 5, print<int>);
+		std::cout << std::endl;
+		
+		std::cout << "Modifying with non-const reference..." << std::endl;
+		iter(arr, 5, increment<int>);
+		std::cout << "After modification: ";
+		iter(arr, 5, printConst<int>);
 		std::cout << std::endl;
 	}
 

@@ -12,6 +12,9 @@
 
 #include "Form.hpp"
 
+Form::Form() : _name("Default"), _signed(false), _gradeToSign(150), _gradeToExecute(150) {
+}
+
 Form::Form(const std::string& name, int gradeToSign, int gradeToExecute)
 	: _name(name), _signed(false), _gradeToSign(gradeToSign), _gradeToExecute(gradeToExecute) {
 	if (gradeToSign < 1 || gradeToExecute < 1)
