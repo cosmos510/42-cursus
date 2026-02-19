@@ -1,8 +1,6 @@
 all: build
 
 build:
-	mkdir -p $(HOME)/data/wordpress
-	mkdir -p $(HOME)/data/mariadb
 	docker compose -f srcs/docker-compose.yml up -d --build
 
 down:
@@ -13,7 +11,7 @@ clean: down
 	docker volume prune -f
 
 fclean: clean
-	rm -rf $(HOME)/data
+	docker volume rm inception_wordpress_data inception_mariadb_data 2>/dev/null || true
 
 re: fclean all
 
