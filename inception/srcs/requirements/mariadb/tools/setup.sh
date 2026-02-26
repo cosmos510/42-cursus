@@ -1,5 +1,8 @@
 #!/bin/bash
 
+MYSQL_ROOT_PASSWORD=$(cat $MYSQL_ROOT_PASSWORD_FILE)
+MYSQL_PASSWORD=$(cat $MYSQL_PASSWORD_FILE)
+
 if [ ! -d "/var/lib/mysql/$MYSQL_DATABASE" ]; then
     mysql_install_db --user=mysql --datadir=/var/lib/mysql
 
