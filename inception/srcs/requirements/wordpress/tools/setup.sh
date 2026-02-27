@@ -18,6 +18,10 @@ if [ ! -f /var/www/html/wp-config.php ]; then
     wp core install --url=$DOMAIN_NAME --title="Inception" --admin_user=$WORDPRESS_ADMIN_USER --admin_password=$WORDPRESS_ADMIN_PASSWORD --admin_email=$WORDPRESS_ADMIN_EMAIL --allow-root
 
     wp user create $WORDPRESS_USER $WORDPRESS_USER_EMAIL --user_pass=$WORDPRESS_USER_PASSWORD --allow-root
+    
+    wp config set WP_HOME "https://\${DOMAIN_NAME}" --allow-root
+    wp config set WP_SITEURL "https://\${DOMAIN_NAME}" --allow-root
+    wp config set RELOCATE true --raw --allow-root
 fi
 
 chown -R www-data:www-data /var/www/html
