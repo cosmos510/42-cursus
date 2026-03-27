@@ -5,6 +5,9 @@ build:
 	@mkdir -p /home/$$(grep LOGIN srcs/.env | cut -d'=' -f2)/data/mariadb
 	docker compose -f srcs/docker-compose.yml up -d --build
 
+up:
+	docker compose -f srcs/docker-compose.yml up -d
+
 down:
 	docker compose -f srcs/docker-compose.yml down
 
@@ -17,4 +20,4 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all build down clean fclean re
+.PHONY: all build up down clean fclean re
