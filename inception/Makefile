@@ -1,6 +1,8 @@
 all: build
 
 build:
+	@mkdir -p /home/$$(grep LOGIN srcs/.env | cut -d'=' -f2)/data/wordpress
+	@mkdir -p /home/$$(grep LOGIN srcs/.env | cut -d'=' -f2)/data/mariadb
 	docker compose -f srcs/docker-compose.yml up -d --build
 
 down:
