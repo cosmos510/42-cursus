@@ -19,9 +19,8 @@ if [ ! -f /var/www/html/wp-config.php ]; then
 
     wp user create $WORDPRESS_USER $WORDPRESS_USER_EMAIL --user_pass=$WORDPRESS_USER_PASSWORD --allow-root
     
-    wp config set WP_HOME "https://\${DOMAIN_NAME}" --allow-root
-    wp config set WP_SITEURL "https://\${DOMAIN_NAME}" --allow-root
-    wp config set RELOCATE true --raw --allow-root
+    wp config set WP_HOME "https://${DOMAIN_NAME}" --allow-root
+    wp config set WP_SITEURL "https://${DOMAIN_NAME}" --allow-root
 fi
 
 chown -R www-data:www-data /var/www/html
