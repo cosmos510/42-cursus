@@ -1,4 +1,3 @@
-PATH=/home/maxmarti/data
 all: build
 
 build:
@@ -18,8 +17,8 @@ clean: down
 
 fclean: clean
 	docker volume rm inception_wordpress_data inception_mariadb_data 2>/dev/null || true
-	sudo rm -rf $(PATH)/mariadb/*
-	sudo rm -rf $(PATH)/wordpress/*
+	sudo rm -rf /home/maxmarti/data/mariadb/*
+	sudo rm -rf /home/maxmarti/data/wordpress/*
 
 re: fclean all
 
