@@ -1,4 +1,5 @@
-secrets/
-.env
+
 *.log
 **/.dockerignore
+srcs/.env
+secrets/credentials.txt
