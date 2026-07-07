@@ -84,6 +84,188 @@ make  # exécute docker compose -f srcs/docker-compose.yml up -d --build
 
 ---
 
+### Explication détaillée des Dockerfiles et scripts
+
+#### NGINX - Dockerfile
+```dockerfile
+FROM debian:bullseye
+# Image de base Debian 11 (avant-dernière stable)
+
+ARG DOMAIN_NAME
+# Récupère le nom de domaine passé en argument au build
+
+RUN apt-get update && apt-get install -y nginx openssl gettext-base && rm -rf /var/lib/apt/lists/*
+# Installe nginx (serveur web), openssl (pour générer le certificat SSL), gettext-base (pour envsubst qui remplace les variables dans la config)
+
+RUN mkdir -p /etc/nginx/ssl
+# Crée le dossier pour stocker le certificat SSL
+
+RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt -subj "/C=FR/ST=Paris/L=Paris/O=42/CN=${DOMAIN_NAME}"
+# Génère un certificat SSL auto-signé valide 365 jours, clé RSA 2048 bits, avec le CN = nom de domaine
+
+COPY conf/nginx.conf /etc/nginx/nginx.conf.template
+# Copie la config nginx comme template (contient $DOMAIN_NAME à remplacer)
+
+COPY tools/entrypoint.sh /entrypoint.sh
+# Copie le script d'entrée
+
+RUN chmod +x /entrypoint.sh
+# Rend le script exécutable
+
+EXPOSE 443
+# Déclare le port 443 (HTTPS)
+
+CMD ["/entrypoint.sh"]
+# Lance le script au démarrage du container
+```
+
+#### NGINX - entrypoint.sh
+```bash
+#!/bin/sh
+envsubst '$DOMAIN_NAME' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+# Remplace $DOMAIN_NAME dans le template par la vraie valeur de la variable d'environnement
+
+exec nginx -g 'daemon off;'
+# Lance nginx au premier plan (pas en daemon, sinon le container s'arrête)
+```
+
+#### WordPress - Dockerfile
+```dockerfile
+FROM debian:bullseye
+# Image de base Debian 11
+
+RUN apt-get update && apt-get install -y php7.4-fpm php7.4-mysql php7.4-curl php7.4-gd php7.4-xml php7.4-mbstring php7.4-zip wget mariadb-client && rm -rf /var/lib/apt/lists/*
+# Installe PHP-FPM 7.4 avec les extensions nécessaires pour WordPress, wget pour télécharger, mariadb-client pour tester la connexion à la DB
+
+RUN mkdir -p /var/www/html && wget https://wordpress.org/latest.tar.gz && tar -xzf latest.tar.gz && mv wordpress/* /var/www/html/ && rm -rf wordpress latest.tar.gz
+# Crée le dossier web, télécharge WordPress, l'extrait et le place dans /var/www/html
+
+RUN wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x wp-cli.phar && mv wp-cli.phar /usr/local/bin/wp
+# Télécharge WP-CLI (outil en ligne de commande pour configurer WordPress sans navigateur)
+
+COPY conf/www.conf /etc/php/7.4/fpm/pool.d/www.conf
+# Copie la config PHP-FPM (écoute sur port 9000)
+
+COPY tools/setup.sh /setup.sh
+RUN chmod +x /setup.sh
+# Copie et rend exécutable le script de setup
+
+WORKDIR /var/www/html
+# Définit le répertoire de travail
+
+EXPOSE 9000
+# Déclare le port 9000 (PHP-FPM)
+
+CMD ["/setup.sh"]
+# Lance le script au démarrage
+```
+
+#### WordPress - setup.sh
+```bash
+#!/bin/bash
+WORDPRESS_DB_PASSWORD=$(cat $WORDPRESS_DB_PASSWORD_FILE)
+WORDPRESS_ADMIN_PASSWORD=$(cat $WORDPRESS_ADMIN_PASSWORD_FILE)
+WORDPRESS_USER_PASSWORD=$(cat $WORDPRESS_USER_PASSWORD_FILE)
+# Lit les mots de passe depuis les Docker secrets (fichiers montés dans /run/secrets/)
+
+mkdir -p /run/php
+# Crée le dossier pour le PID de PHP-FPM
+
+sleep 15
+# Attend que MariaDB soit prêt
+
+while ! mysql -h mariadb -u $WORDPRESS_DB_USER -p$WORDPRESS_DB_PASSWORD -e "SELECT 1" >/dev/null 2>&1; do
+    echo "Waiting for MariaDB..."
+    sleep 2
+done
+# Boucle qui attend que MariaDB accepte les connexions avant de continuer
+
+if [ ! -f /var/www/html/wp-config.php ]; then
+    wp config create --dbname=$WORDPRESS_DB_NAME --dbuser=$WORDPRESS_DB_USER --dbpass=$WORDPRESS_DB_PASSWORD --dbhost=$WORDPRESS_DB_HOST --allow-root
+    # Crée wp-config.php avec les infos de connexion à la base
+
+    wp core install --url="https://${DOMAIN_NAME}" --title="Inception" --admin_user=$WORDPRESS_ADMIN_USER --admin_password=$WORDPRESS_ADMIN_PASSWORD --admin_email=$WORDPRESS_ADMIN_EMAIL --allow-root
+    # Installe WordPress (crée les tables, l'admin)
+
+    wp user create $WORDPRESS_USER $WORDPRESS_USER_EMAIL --user_pass=$WORDPRESS_USER_PASSWORD --allow-root
+    # Crée le deuxième utilisateur (non-admin)
+
+    wp option update home "https://${DOMAIN_NAME}" --allow-root
+    wp option update siteurl "https://${DOMAIN_NAME}" --allow-root
+    # Configure les URLs du site en HTTPS
+fi
+
+chown -R www-data:www-data /var/www/html
+# Donne les droits au user www-data (utilisé par PHP-FPM)
+
+php-fpm7.4 -F
+# Lance PHP-FPM au premier plan (-F = foreground)
+```
+
+#### MariaDB - Dockerfile
+```dockerfile
+FROM debian:bullseye
+# Image de base Debian 11
+
+RUN apt-get update && apt-get install -y mariadb-server && rm -rf /var/lib/apt/lists/*
+# Installe le serveur MariaDB
+
+COPY conf/50-server.cnf /etc/mysql/mariadb.conf.d/50-server.cnf
+# Copie la config MariaDB (bind-address 0.0.0.0 pour accepter les connexions réseau)
+
+COPY tools/setup.sh /setup.sh
+RUN chmod +x /setup.sh
+# Copie et rend exécutable le script de setup
+
+EXPOSE 3306
+# Déclare le port 3306 (MySQL/MariaDB)
+
+CMD ["/setup.sh"]
+# Lance le script au démarrage
+```
+
+#### MariaDB - setup.sh
+```bash
+#!/bin/bash
+MYSQL_ROOT_PASSWORD=$(cat $MYSQL_ROOT_PASSWORD_FILE)
+MYSQL_PASSWORD=$(cat $MYSQL_PASSWORD_FILE)
+# Lit les mots de passe depuis les Docker secrets
+
+if [ ! -d "/var/lib/mysql/$MYSQL_DATABASE" ]; then
+    # Si la base n'existe pas encore (premier lancement)
+
+    mysql_install_db --user=mysql --datadir=/var/lib/mysql
+    # Initialise les fichiers système de MariaDB
+
+    mysqld_safe --datadir=/var/lib/mysql &
+    sleep 10
+    # Lance MariaDB temporairement en background pour créer la base et les users
+
+    mysql -e "CREATE DATABASE IF NOT EXISTS $MYSQL_DATABASE;"
+    # Crée la base de données WordPress
+
+    mysql -e "CREATE USER IF NOT EXISTS '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';"
+    # Crée l'utilisateur WordPress accessible depuis n'importe quel host (%)
+
+    mysql -e "GRANT ALL PRIVILEGES ON $MYSQL_DATABASE.* TO '$MYSQL_USER'@'%';"
+    # Donne tous les droits sur la base WordPress à cet utilisateur
+
+    mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';"
+    # Change le mot de passe root
+
+    mysql -e "FLUSH PRIVILEGES;"
+    # Applique les changements de privilèges
+
+    mysqladmin -u root -p$MYSQL_ROOT_PASSWORD shutdown
+    # Arrête MariaDB proprement
+fi
+
+mysqld_safe --datadir=/var/lib/mysql
+# Relance MariaDB au premier plan (le processus principal du container)
+```
+
+---
+
 ## Docker Network
 
 ### docker-network utilisé ?
