@@ -1,5 +1,3 @@
-
 *.log
 **/.dockerignore
-srcs/.env
-secrets/credentials.txt
+secrets/

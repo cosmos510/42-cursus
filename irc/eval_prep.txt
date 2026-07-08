@@ -1,0 +1,568 @@
+# ============================================================================ #
+#                      PREPARATION A L'EVALUATION - ft_irc                      #
+# ============================================================================ #
+
+
+# ============================================================================ #
+#                           1. BASIC CHECKS                                     #
+# ============================================================================ #
+
+## Ce que le correcteur verifie :
+# - Makefile present, compile correctement, C++, executable = ircserv
+# - Un seul poll() dans tout le code
+# - poll() appele avant chaque accept/recv/send
+# - Pas d'utilisation de errno apres les appels
+# - fcntl() utilise UNIQUEMENT comme : fcntl(fd, F_SETFL, O_NONBLOCK)
+
+## Nos reponses :
+
+### Makefile et compilation :
+# - Makefile avec les regles : all, clean, fclean, re
+# - Flags : -Wall -Wextra -Werror -std=c++98
+# - Compilateur : c++
+# - Executable genere : ircserv
+# - Commande pour montrer : make re
+
+### Combien de poll() dans le code :
+# UN SEUL poll() dans tout le projet.
+# Il se trouve dans Server.cpp, dans la fonction Server::run() :
+#
+#   int ret = poll(&_pollfds[0], _pollfds.size(), -1);
+#
+# C'est la seule ligne de tout le code qui appelle poll().
+# Pour le prouver au correcteur :
+#   grep -rn "poll(" src/
+# -> Affiche une seule occurrence (dans Server.cpp)
+
+### poll() avant chaque accept/recv/send :
+# - accept() : appele dans _acceptClient(), qui n'est executee QUE quand
+#   poll() a signale POLLIN sur la socket d'ecoute (_listenFd)
+#
+# - recv() : appele dans _receiveData(), qui n'est executee QUE quand
+#   poll() a signale POLLIN sur le fd du client
+#
+# - send() : appele dans Client::flushSendBuffer(), qui est appele par
+#   Server::_sendData(), qui n'est executee QUE quand poll() a signale
+#   POLLOUT sur le fd du client
+#
+# AUCUN send() direct n'est fait ailleurs dans le code.
+# Tous les messages passent par queueMessage() -> buffer -> POLLOUT -> send()
+
+### Pas d'utilisation de errno :
+# Apres accept(), recv() et send(), on ne verifie JAMAIS errno.
+# - Si recv() retourne <= 0 : on marque le client pour deconnexion
+# - Si send() retourne < 0 : on marque le client pour deconnexion
+# - Si accept() retourne < 0 : on return simplement
+# Aucun "if (errno == EAGAIN)" dans le code.
+# Pour le prouver :
+#   grep -rn "errno" src/
+# -> Aucun resultat
+
+### fcntl() :
+# Deux appels a fcntl() dans tout le code, les deux identiques :
+#   fcntl(_listenFd, F_SETFL, O_NONBLOCK)   -> Server.cpp, _initSocket()
+#   fcntl(fd, F_SETFL, O_NONBLOCK)           -> Server.cpp, _acceptClient()
+# Aucune autre utilisation de fcntl().
+# Pour le prouver :
+#   grep -rn "fcntl" src/
+# -> Affiche exactement 2 lignes, toutes les deux avec F_SETFL, O_NONBLOCK
+
+## Comment montrer tout ca rapidement au correcteur :
+#   make re                          # Compile sans erreur ni warning
+#   grep -rn "poll(" src/            # 1 seul resultat
+#   grep -rn "fcntl" src/            # 2 resultats, tous F_SETFL O_NONBLOCK
+#   grep -rn "errno" src/            # 0 resultat
+#   grep -rn "send(" src/            # Uniquement dans Client.cpp (flushSendBuffer)
+
+
+# ============================================================================ #
+#                           2. NETWORKING                                        #
+# ============================================================================ #
+
+## Ce que le correcteur verifie :
+# - Le serveur ecoute sur toutes les interfaces reseau sur le port donne
+# - On peut se connecter avec nc, envoyer des commandes, recevoir des reponses
+# - On peut se connecter avec un client IRC de reference
+# - Le serveur gere plusieurs connexions simultanees sans bloquer
+# - Les messages dans un channel sont envoyes a tous les membres
+
+## Nos reponses :
+
+### Ecoute sur toutes les interfaces :
+# Fichier : src/Server.cpp, fonction _initSocket(), ligne ~87
+#   addr.sin_addr.s_addr = INADDR_ANY;
+# INADDR_ANY = ecoute sur 0.0.0.0 (toutes les interfaces reseau)
+# Le port est passe en argument : ./ircserv <port> <password>
+
+### Test avec nc :
+# Terminal 1 : ./ircserv 6667 pass123
+# Terminal 2 :
+#   nc 127.0.0.1 6667
+#   PASS pass123
+#   NICK test
+#   USER test 0 * :Test User
+#   -> Le serveur repond avec les messages 001, 002, 003, 004 (bienvenue)
+#   JOIN #general
+#   -> Le serveur repond avec JOIN, 353 (NAMES), 366 (end of NAMES)
+#   PRIVMSG #general :hello
+#   -> Le message est broadcast aux autres membres
+
+### Client IRC de reference :
+# Notre client de reference est irssi (ou WeeChat selon preference)
+# Connexion avec irssi :
+#   /connect 127.0.0.1 6667 pass123
+# Connexion avec WeeChat :
+#   /server add local 127.0.0.1/6667 -password=pass123
+#   /connect local
+#
+# Le serveur ignore la commande CAP (envoyee par les clients modernes)
+# Fichier : src/Server.cpp, fonction _processLine(), ligne ~303
+#   if (cmd == "CAP") return;
+
+### Connexions multiples simultanees :
+# Le serveur utilise poll() pour gerer TOUS les fd en meme temps.
+# Fichier : src/Server.cpp, fonction run()
+# - _pollfds contient tous les fd surveilles (ecoute + tous les clients)
+# - poll() retourne des qu'un evenement se produit sur N'IMPORTE quel fd
+# - On traite tous les fd qui ont un evenement dans la meme iteration
+# - Aucun appel bloquant : tout est en O_NONBLOCK
+#
+# Pour tester : ouvrir 3 terminaux avec nc en meme temps, les 3 fonctionnent
+# independamment. Envoyer des commandes sur l'un ne bloque pas les autres.
+
+### Broadcast des messages dans un channel :
+# Fichier : src/Channel.cpp, fonction broadcast(), ligne ~106
+# Quand un client envoie PRIVMSG #chan :message, la commande _cmdPrivmsg()
+# (src/Commands.cpp) appelle ch->broadcast(msg, c) qui envoie le message
+# a TOUS les membres du channel SAUF l'emetteur (c = exclude).
+#
+# Pour tester :
+# Terminal 1 (alice) : JOIN #test
+# Terminal 2 (bob)   : JOIN #test
+# Terminal 3 (carol) : JOIN #test
+# Terminal 2 (bob)   : PRIVMSG #test :Hello!
+# -> alice et carol recoivent ":bob!bob@127.0.0.1 PRIVMSG #test :Hello!"
+# -> bob ne recoit PAS son propre message
+
+## Demo rapide pour le correcteur :
+# Terminal 1 : ./ircserv 6667 pass123
+# Terminal 2 : nc 127.0.0.1 6667
+#   PASS pass123
+#   NICK alice
+#   USER alice 0 * :Alice
+#   JOIN #eval
+# Terminal 3 : nc 127.0.0.1 6667
+#   PASS pass123
+#   NICK bob
+#   USER bob 0 * :Bob
+#   JOIN #eval
+#   PRIVMSG #eval :Coucou Alice !
+# -> Dans le terminal 2 (alice), on voit le message de bob apparaitre
+
+
+# ============================================================================ #
+#                        3. NETWORKING SPECIALS                                  #
+# ============================================================================ #
+
+## Ce que le correcteur verifie :
+# - Commandes partielles via nc : le serveur gere correctement
+# - Kill inattendu d'un client : le serveur reste operationnel
+# - Kill nc avec une commande a moitie envoyee : pas de state corrompu
+# - Client stoppe (^Z) + flood : le serveur ne hang pas, pas de leak memoire
+
+## Nos reponses :
+
+### Commandes partielles :
+# Le mecanisme est dans Client::extractLine()
+# Fichier : src/Client.cpp, ligne ~78
+#
+# Fonctionnement :
+# - recv() ajoute les donnees brutes au buffer de reception (_buffer)
+# - extractLine() cherche \r\n (ou \n) dans le buffer
+# - Si pas de \r\n : retourne "" -> on ne traite rien, on attend la suite
+# - Si \r\n trouve : retourne la ligne complete et l'efface du buffer
+#
+# Donc si un client envoie "PRIV" puis "MSG #chan :hi\r\n" en 2 paquets :
+#   1er recv : _buffer = "PRIV" -> extractLine() = "" (pas de \r\n, on attend)
+#   2e recv  : _buffer = "PRIVMSG #chan :hi\r\n" -> extractLine() = "PRIVMSG #chan :hi"
+#
+# Pendant ce temps, les autres connexions fonctionnent normalement car
+# poll() continue de surveiller TOUS les fd.
+#
+# Pour tester avec nc :
+#   printf "PASS pas" | nc 127.0.0.1 6667 &
+#   # (commande partielle envoyee, pas de \r\n)
+#   # Ouvrir un autre nc et verifier qu'il fonctionne normalement
+#   nc 127.0.0.1 6667
+#   PASS pass123
+#   NICK test
+#   USER test 0 * :Test
+#   # -> Ca marche, le serveur repond normalement
+
+### Kill inattendu d'un client :
+# Quand un client est kill (kill -9, fermeture du terminal, Ctrl+C sur nc) :
+# - Le fd est ferme cote client
+# - poll() detecte POLLHUP ou POLLERR sur ce fd
+# - Fichier : src/Server.cpp, dans la boucle run(), ligne ~161
+#     if (rev & (POLLERR | POLLHUP | POLLNVAL)) {
+#         _toRemove.insert(fd);
+#     }
+# - Le client est proprement deconnecte dans _removeClient() :
+#   * Retire de tous les channels
+#   * Broadcast QUIT aux autres membres
+#   * close(fd), delete client, retire du tableau poll
+# - Le serveur continue de fonctionner pour les autres clients
+#
+# Pour tester :
+#   Terminal 1 : ./ircserv 6667 pass123
+#   Terminal 2 : nc 127.0.0.1 6667 (se connecter, JOIN #test)
+#   Terminal 3 : nc 127.0.0.1 6667 (se connecter, JOIN #test)
+#   -> Kill le terminal 2 (Ctrl+C ou fermer le terminal)
+#   -> Terminal 3 recoit ":nick!user@host QUIT :Leaving"
+#   -> Le serveur affiche "Client disconnected (fd X)"
+#   -> Terminal 3 fonctionne toujours normalement
+#   -> Un nouveau nc peut se connecter sans probleme
+
+### Kill nc avec commande partielle :
+# Meme mecanisme que ci-dessus. Si nc est kill avec un buffer partiel :
+# - Le fd est ferme -> poll() detecte POLLHUP
+# - _removeClient() est appele
+# - Le buffer partiel (_buffer) est simplement libere avec le delete du Client
+# - Aucun traitement de la commande incomplete
+# - Le serveur n'est pas dans un etat bizarre
+#
+# Fichier : src/Server.cpp, _removeClient(), ligne ~370
+# Le delete du Client libere automatiquement le _buffer (std::string)
+#
+# Pour tester :
+#   Terminal 2 : nc 127.0.0.1 6667
+#   PASS pass123
+#   NICK test
+#   USER test 0 * :Test
+#   (taper "PRIVMSG #te" sans appuyer Entree, puis Ctrl+C)
+#   -> Le serveur detecte la deconnexion, cleanup propre
+#   -> Les autres clients fonctionnent toujours
+
+### Client stoppe (^Z) + flood :
+# C'est le point le plus critique. Notre systeme de buffer d'envoi le gere.
+#
+# Quand un client est stoppe (^Z = SIGTSTP) :
+# - Son processus est suspendu, il ne lit plus sur sa socket
+# - Son buffer TCP kernel se remplit progressivement
+# - MAIS notre serveur ne fait JAMAIS de send() bloquant
+#
+# Mecanisme (le plus important du projet) :
+# 1. Les messages sont stockes dans _sendBuffer du client (Client.cpp)
+#    Fichier : src/Client.cpp, queueMessage(), ligne ~93
+#
+# 2. poll() surveille POLLOUT sur ce fd
+#    Fichier : src/Server.cpp, mise a jour des events, ligne ~192
+#
+# 3. Quand POLLOUT est signale, on tente d'envoyer via flushSendBuffer()
+#    Fichier : src/Client.cpp, flushSendBuffer(), ligne ~112
+#    - send() en non-bloquant envoie ce qu'il peut
+#    - Si le buffer kernel est plein : send() retourne le nombre d'octets
+#      effectivement envoyes (possiblement 0 ou partiel)
+#    - On efface seulement ce qui a ete envoye, le reste attend
+#
+# 4. Si le buffer kernel est completement plein :
+#    - POLLOUT n'est plus signale par poll() (le fd n'est pas pret en ecriture)
+#    - Les messages s'accumulent dans _sendBuffer
+#    - Le serveur continue de tourner normalement pour les autres clients
+#
+# 5. Quand le client reprend (fg) :
+#    - Il recommence a lire sa socket -> le buffer kernel se vide
+#    - poll() signale a nouveau POLLOUT
+#    - flushSendBuffer() envoie les messages accumules
+#    - Le client recoit tous les messages qu'il a manques
+#
+# Le serveur ne hang JAMAIS car :
+# - send() est non-bloquant (fd en O_NONBLOCK)
+# - On ne send() que quand poll() dit POLLOUT
+# - Si POLLOUT n'est pas signale, on ne tente meme pas d'envoyer
+#
+# Pour tester :
+#   Terminal 1 : ./ircserv 6667 pass123
+#   Terminal 2 : nc 127.0.0.1 6667
+#     PASS pass123 / NICK alice / USER alice 0 * :Alice / JOIN #flood
+#   Terminal 3 : nc 127.0.0.1 6667
+#     PASS pass123 / NICK bob / USER bob 0 * :Bob / JOIN #flood
+#   -> Stopper terminal 2 : Ctrl+Z
+#   -> Dans terminal 3, envoyer plein de messages :
+#     PRIVMSG #flood :msg1
+#     PRIVMSG #flood :msg2
+#     PRIVMSG #flood :msg3
+#     ... (repeter beaucoup)
+#   -> Le serveur ne bloque pas, terminal 3 fonctionne toujours
+#   -> Reprendre terminal 2 : fg
+#   -> alice recoit tous les messages accumules d'un coup
+
+### Memory leaks :
+# Pour verifier les leaks pendant le test ^Z + flood :
+#   valgrind --leak-check=full ./ircserv 6667 pass123
+# Ou sur macOS :
+#   leaks --atExit -- ./ircserv 6667 pass123
+#
+# Pas de leak car :
+# - Les messages sont dans des std::string (_sendBuffer) -> liberes automatiquement
+# - Pas de new/malloc pour les messages, juste de la concatenation de string
+# - Le _sendBuffer est libere quand le Client est delete (deconnexion)
+
+
+# ============================================================================ #
+#                      4. CLIENT COMMANDS BASIC                                  #
+# ============================================================================ #
+
+## Ce que le correcteur verifie :
+# - Authentification (PASS), nickname (NICK), username (USER), join (JOIN)
+# - PRIVMSG fonctionne avec differents parametres (channel + prive)
+
+## Nos reponses :
+
+### Authentification et enregistrement :
+# L'enregistrement se fait en 3 etapes obligatoires :
+#   1. PASS <password>  -> src/Commands.cpp, _cmdPass(), ligne ~34
+#   2. NICK <nickname>  -> src/Commands.cpp, _cmdNick(), ligne ~50
+#   3. USER <user> 0 * :<realname> -> src/Commands.cpp, _cmdUser(), ligne ~88
+#
+# Un client est "registered" quand les 3 sont faits :
+#   Fichier : src/Client.cpp, isRegistered(), ligne ~33
+#   return _passwd && _nickSet && _userSet;
+#
+# Apres enregistrement, le serveur envoie le welcome (001-004) :
+#   Fichier : src/Server.cpp, _welcomeClient(), ligne ~462
+#
+# Pour tester avec nc :
+#   PASS pass123       -> pas de reponse (ok)
+#   NICK max           -> pas de reponse (ok)
+#   USER max 0 * :Max  -> recoit 001, 002, 003, 004 (bienvenue = registered)
+#
+# Pour tester avec irssi :
+#   /connect 127.0.0.1 6667 pass123
+#   -> irssi envoie automatiquement PASS/NICK/USER et affiche le welcome
+
+### JOIN :
+# Fichier : src/Commands.cpp, _cmdJoin(), ligne ~108
+#
+# Pour tester :
+#   JOIN #test
+#   -> Recoit : ":nick!user@host JOIN #test"
+#   -> Recoit : "353 nick = #test :@nick" (liste des membres, @ = operateur)
+#   -> Recoit : "366 nick #test :End of /NAMES list"
+
+### PRIVMSG vers un channel :
+# Fichier : src/Commands.cpp, _cmdPrivmsg(), ligne ~175
+#
+# Pour tester (2 clients dans #test) :
+#   Client 1 (alice) : PRIVMSG #test :Hello tout le monde !
+#   -> Client 2 (bob) recoit : ":alice!alice@127.0.0.1 PRIVMSG #test :Hello tout le monde !"
+#   -> Client 1 ne recoit PAS son propre message (exclude dans broadcast)
+#
+# Cas d'erreur :
+#   PRIVMSG #inexistant :test  -> 403 : No such channel
+#   PRIVMSG #test :msg (sans etre membre) -> 404 : Cannot send to channel
+
+### PRIVMSG vers un utilisateur (message prive) :
+# Meme fonction _cmdPrivmsg(), branche "else" quand target ne commence pas par #
+#
+# Pour tester :
+#   Client 1 (alice) : PRIVMSG bob :Message secret
+#   -> bob recoit : ":alice!alice@127.0.0.1 PRIVMSG bob :Message secret"
+#   -> Personne d'autre ne recoit le message
+#
+# Cas d'erreur :
+#   PRIVMSG inexistant :test  -> 401 : No such nick/channel
+
+### PRIVMSG cas limites :
+#   PRIVMSG                   -> 411 : No recipient given (PRIVMSG)
+#   PRIVMSG #test             -> 412 : No text to send (pas de message)
+#   PRIVMSG #test :           -> Envoie un message vide (valide en IRC)
+#   PRIVMSG #test :msg avec espaces -> Le trailing apres : est un seul argument
+
+## Demo rapide pour le correcteur :
+# Terminal 1 : ./ircserv 6667 pass123
+# Terminal 2 (nc) :
+#   PASS pass123
+#   NICK alice
+#   USER alice 0 * :Alice
+#   JOIN #eval
+# Terminal 3 (nc) :
+#   PASS pass123
+#   NICK bob
+#   USER bob 0 * :Bob
+#   JOIN #eval
+#   PRIVMSG #eval :Message channel    -> alice le recoit
+#   PRIVMSG alice :Message prive      -> alice le recoit (pas dans le channel)
+# Terminal 4 (irssi) :
+#   /connect 127.0.0.1 6667 pass123
+#   /join #eval
+#   /msg #eval Hello from irssi       -> alice et bob le recoivent
+#   /msg alice Salut en prive          -> seule alice le recoit
+
+
+# ============================================================================ #
+#                   5. CLIENT COMMANDS CHANNEL OPERATOR                          #
+# ============================================================================ #
+
+## Ce que le correcteur verifie :
+# - Un utilisateur normal n'a PAS les privileges operateur
+# - Un operateur peut executer toutes les commandes op
+# - Toutes les commandes channel operator fonctionnent
+
+## Nos reponses :
+
+### Qui est operateur :
+# Le PREMIER client a rejoindre un channel devient automatiquement operateur.
+# Fichier : src/Commands.cpp, _cmdJoin(), ligne ~140
+#   if (isNew)
+#       ch->addOperator(c);
+#
+# Un operateur peut donner le statut op a un autre avec MODE +o.
+# Dans la liste NAMES, les operateurs sont prefixes par @ :
+#   ":ircserv 353 nick = #chan :@alice bob carol"
+#   -> alice est op, bob et carol ne le sont pas
+
+### Verification des privileges (user normal refuse) :
+# Chaque commande op verifie isOperator() avant d'agir :
+#   - KICK  : src/Commands.cpp, _cmdKick(), ligne ~203
+#   - INVITE: src/Commands.cpp, _cmdInvite(), ligne ~222
+#   - TOPIC (si +t): src/Commands.cpp, _cmdTopic(), ligne ~253
+#   - MODE  : src/Commands.cpp, _cmdMode(), ligne ~282
+#
+# Si le client n'est pas op, il recoit :
+#   ":ircserv 482 nick #chan :You're not channel operator"
+#
+# Pour tester (bob n'est pas op) :
+#   KICK #test alice :dehors     -> 482 : You're not channel operator
+#   INVITE carol #test           -> 482 : You're not channel operator
+#   MODE #test +i                -> 482 : You're not channel operator
+#   TOPIC #test :nouveau topic   -> 482 (si mode +t actif)
+
+### KICK (expulser un membre) :
+# Fichier : src/Commands.cpp, _cmdKick(), ligne ~192
+# Syntaxe : KICK <channel> <nick> [:<raison>]
+#
+# Pour tester (alice est op) :
+#   alice: KICK #test bob :Comportement inapproprie
+#   -> Tout le channel recoit : ":alice!...@... KICK #test bob :Comportement inapproprie"
+#   -> bob est retire du channel
+#   -> bob ne recoit plus les messages du channel
+#
+# Cas d'erreur :
+#   KICK #test inexistant :bye   -> 441 : They aren't on that channel
+#   KICK #inexistant bob :bye    -> 403 : No such channel
+#   (bob) KICK #test alice :bye  -> 482 : You're not channel operator
+
+### INVITE (inviter un utilisateur) :
+# Fichier : src/Commands.cpp, _cmdInvite(), ligne ~214
+# Syntaxe : INVITE <nick> <channel>
+#
+# Pour tester (alice est op, carol n'est pas dans #test) :
+#   alice: INVITE carol #test
+#   -> alice recoit : ":ircserv 341 alice carol #test" (confirmation)
+#   -> carol recoit : ":alice!...@... INVITE carol #test" (notification)
+#   -> carol peut maintenant JOIN #test meme si le channel est +i
+#
+# Cas d'erreur :
+#   INVITE inexistant #test      -> 401 : No such nick/channel
+#   INVITE bob #test (bob deja dedans) -> 443 : is already on channel
+#   (bob) INVITE carol #test     -> 482 : You're not channel operator
+
+### TOPIC (voir/modifier le topic) :
+# Fichier : src/Commands.cpp, _cmdTopic(), ligne ~237
+# Syntaxe : TOPIC <channel> [:<nouveau topic>]
+#
+# Sans mode +t, tout le monde peut changer le topic.
+# Avec mode +t, seuls les operateurs peuvent le changer.
+#
+# Pour tester :
+#   alice: TOPIC #test :Bienvenue sur le channel
+#   -> Tout le channel recoit : ":alice!...@... TOPIC #test :Bienvenue sur le channel"
+#   alice: MODE #test +t          (active la restriction)
+#   bob: TOPIC #test :Autre topic -> 482 : You're not channel operator
+#   alice: TOPIC #test :Nouveau   -> OK (alice est op)
+#   TOPIC #test                   -> Affiche le topic actuel (332)
+#   TOPIC #test (si pas de topic) -> 331 : No topic is set
+
+### MODE +i (invite-only) :
+# Fichier : src/Commands.cpp, _cmdMode(), ligne ~296 (case 'i')
+#
+# Pour tester :
+#   alice: MODE #test +i
+#   -> Tout le channel recoit : ":alice!...@... MODE #test +i"
+#   carol: JOIN #test            -> 473 : Cannot join channel (+i)
+#   alice: INVITE carol #test
+#   carol: JOIN #test            -> OK (carol a ete invitee)
+
+### MODE +t (topic restreint) :
+# Fichier : src/Commands.cpp, _cmdMode(), ligne ~300 (case 't')
+#
+# Pour tester :
+#   alice: MODE #test +t
+#   bob: TOPIC #test :test       -> 482 : You're not channel operator
+#   alice: TOPIC #test :ok       -> OK
+
+### MODE +k (cle/mot de passe du channel) :
+# Fichier : src/Commands.cpp, _cmdMode(), ligne ~304 (case 'k')
+#
+# Pour tester :
+#   alice: MODE #test +k secret
+#   -> Tout le channel recoit : ":alice!...@... MODE #test +k secret"
+#   carol: JOIN #test            -> 475 : Cannot join channel (+k)
+#   carol: JOIN #test secret     -> OK (bonne cle)
+#   alice: MODE #test -k         -> Retire le mot de passe
+
+### MODE +o (donner/retirer operateur) :
+# Fichier : src/Commands.cpp, _cmdMode(), ligne ~316 (case 'o')
+#
+# Pour tester :
+#   alice: MODE #test +o bob
+#   -> Tout le channel recoit : ":alice!...@... MODE #test +o bob"
+#   -> bob est maintenant operateur (peut KICK, INVITE, MODE, etc.)
+#   alice: MODE #test -o bob
+#   -> bob n'est plus operateur
+#
+# Cas d'erreur :
+#   MODE #test +o inexistant     -> 441 : They aren't on that channel
+
+### MODE +l (limite de membres) :
+# Fichier : src/Commands.cpp, _cmdMode(), ligne ~330 (case 'l')
+#
+# Pour tester :
+#   alice: MODE #test +l 2
+#   -> Tout le channel recoit : ":alice!...@... MODE #test +l 2"
+#   (si deja 2 membres dans #test)
+#   carol: JOIN #test            -> 471 : Cannot join channel (+l)
+#   alice: MODE #test -l         -> Retire la limite
+#   carol: JOIN #test            -> OK
+
+### MODE consultation (sans argument) :
+# Pour tester :
+#   MODE #test                   -> Recoit 324 avec les modes actuels (ex: "+itk")
+
+### Combinaison de modes :
+# On peut combiner plusieurs modes en une seule commande :
+#   MODE #test +it               -> Active invite-only ET topic restreint
+#   MODE #test -ik               -> Retire invite-only ET la cle
+#   MODE #test +ok bob secret    -> Donne op a bob ET met la cle "secret"
+
+## Demo rapide pour le correcteur :
+# Terminal 1 : ./ircserv 6667 pass123
+# Terminal 2 (alice, sera op) :
+#   PASS pass123 / NICK alice / USER alice 0 * :Alice
+#   JOIN #eval                   -> alice est @op (premiere a join)
+# Terminal 3 (bob, user normal) :
+#   PASS pass123 / NICK bob / USER bob 0 * :Bob
+#   JOIN #eval                   -> bob est membre normal
+# Tester que bob ne peut PAS :
+#   bob: KICK #eval alice :test  -> 482
+#   bob: MODE #eval +i           -> 482
+#   bob: INVITE carol #eval      -> 482
+# Tester que alice PEUT :
+#   alice: MODE #eval +i         -> OK, broadcast
+#   alice: INVITE carol #eval    -> OK (si carol existe)
+#   alice: KICK #eval bob :bye   -> OK, bob est expulse
+#   alice: MODE #eval +o bob     -> (si bob est revenu) bob devient op
+#   alice: TOPIC #eval :Hello    -> OK
+#   alice: MODE #eval +k pass    -> OK
+#   alice: MODE #eval +l 5       -> OK

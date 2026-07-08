@@ -1,0 +1,208 @@
+# ============================================================================ #
+#                         GUIDE D'UTILISATION - ft_irc                          #
+# ============================================================================ #
+
+
+# ============================================================================ #
+#                              LANCER LE SERVEUR                                #
+# ============================================================================ #
+
+# Compiler le projet
+make
+
+# Lancer le serveur sur le port 6667 avec le mot de passe "pass123"
+./ircserv 6667 pass123
+
+# Le serveur affiche :
+# Server listening on port 6667
+
+# Pour arreter le serveur : Ctrl+C
+
+
+# ============================================================================ #
+#                         SE CONNECTER AVEC NC (NETCAT)                         #
+# ============================================================================ #
+
+# Ouvrir un terminal et se connecter :
+nc 127.0.0.1 6667
+
+# Ensuite taper les commandes suivantes (dans cet ordre) :
+PASS pass123
+NICK max
+USER maxime 0 * :Maxime Martin
+
+# Le serveur repond avec les messages de bienvenue (001-004)
+# Tu es maintenant connecte et enregistre !
+
+
+# ============================================================================ #
+#                       SE CONNECTER AVEC IRSSI                                 #
+# ============================================================================ #
+
+# Lancer irssi puis taper :
+/connect 127.0.0.1 6667 pass123
+
+# Irssi gere automatiquement PASS/NICK/USER
+
+
+# ============================================================================ #
+#                       SE CONNECTER AVEC WEECHAT                               #
+# ============================================================================ #
+
+# Dans WeeChat :
+/server add monserv 127.0.0.1/6667 -password=pass123
+/connect monserv
+
+
+# ============================================================================ #
+#                         COMMANDES DE BASE                                     #
+# ============================================================================ #
+
+# --- Rejoindre un channel ---
+JOIN #general
+
+# --- Envoyer un message dans un channel ---
+PRIVMSG #general :Salut tout le monde !
+
+# --- Envoyer un message prive a un utilisateur ---
+PRIVMSG max :Hey, ca va ?
+
+# --- Changer de nickname ---
+NICK nouveaunom
+
+# --- Voir le topic d'un channel ---
+TOPIC #general
+
+# --- Quitter un channel ---
+PART #general :A plus !
+
+# --- Se deconnecter du serveur ---
+QUIT :Bye bye
+
+
+# ============================================================================ #
+#                    COMMANDES OPERATEUR (CHANNEL OP)                           #
+# ============================================================================ #
+
+# Le premier a rejoindre un channel est automatiquement operateur (@)
+
+# --- Changer le topic ---
+TOPIC #general :Bienvenue sur le channel general
+
+# --- Kick un utilisateur ---
+KICK #general troll :Comportement inapproprie
+
+# --- Inviter quelqu'un ---
+INVITE ami #general
+
+# --- Donner le statut operateur a quelqu'un ---
+MODE #general +o ami
+
+# --- Retirer le statut operateur ---
+MODE #general -o ami
+
+
+# ============================================================================ #
+#                         GESTION DES MODES                                     #
+# ============================================================================ #
+
+# --- Activer le mode invite-only ---
+# (seuls les invites peuvent rejoindre)
+MODE #general +i
+
+# --- Desactiver le mode invite-only ---
+MODE #general -i
+
+# --- Mettre un mot de passe sur le channel ---
+MODE #general +k secret
+
+# --- Rejoindre un channel avec mot de passe ---
+JOIN #general secret
+
+# --- Retirer le mot de passe ---
+MODE #general -k
+
+# --- Restreindre le topic aux operateurs ---
+MODE #general +t
+
+# --- Limiter le nombre de membres ---
+MODE #general +l 10
+
+# --- Retirer la limite ---
+MODE #general -l
+
+# --- Combiner plusieurs modes ---
+MODE #general +it
+MODE #general -itk
+
+# --- Voir les modes actuels d'un channel ---
+MODE #general
+
+
+# ============================================================================ #
+#                    TESTER AVEC PLUSIEURS CLIENTS                              #
+# ============================================================================ #
+
+# Terminal 1 : lancer le serveur
+./ircserv 6667 pass123
+
+# Terminal 2 : premier client
+nc 127.0.0.1 6667
+PASS pass123
+NICK alice
+USER alice 0 * :Alice
+JOIN #test
+
+# Terminal 3 : deuxieme client
+nc 127.0.0.1 6667
+PASS pass123
+NICK bob
+USER bob 0 * :Bob
+JOIN #test
+PRIVMSG #test :Hello Alice !
+
+# -> Alice recoit le message de Bob dans son terminal
+
+
+# ============================================================================ #
+#                         TESTER LES CAS SPECIAUX                               #
+# ============================================================================ #
+
+# --- Commande partielle (envoyer en 2 fois) ---
+# Dans nc, taper "PRIV" puis Ctrl+D ne ferme pas, taper "MSG #test :hi\r\n"
+# Le serveur accumule et traite quand la ligne est complete
+
+# --- Mauvais mot de passe ---
+PASS mauvaismdp
+# -> Reponse : 464 * :Password incorrect
+
+# --- Nick deja pris ---
+NICK alice
+# -> Reponse : 433 * alice :Nickname is already in use
+
+# --- Commande sans etre enregistre ---
+JOIN #test
+# -> Reponse : 451 * :You have not registered
+
+# --- Kick sans etre operateur ---
+KICK #test alice :dehors
+# -> Reponse : 482 nick #test :You're not channel operator
+
+# --- Rejoindre un channel invite-only sans invitation ---
+JOIN #prive
+# -> Reponse : 473 nick #prive :Cannot join channel (+i)
+
+
+# ============================================================================ #
+#                              RAPPEL IMPORTANT                                 #
+# ============================================================================ #
+
+# Avec nc, les commandes doivent se terminer par un retour a la ligne.
+# Appuyer sur Entree envoie la commande.
+#
+# L'ordre d'enregistrement est OBLIGATOIRE :
+#   1. PASS <password>
+#   2. NICK <nickname>
+#   3. USER <username> 0 * :<realname>
+#
+# Sans ces 3 commandes, aucune autre commande ne sera acceptee.

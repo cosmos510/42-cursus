@@ -1,0 +1,220 @@
+# ============================================================================ #
+#                         MAXIME_DOC - Documentation ft_irc                     #
+# ============================================================================ #
+
+# ============================================================================ #
+#                          PRINCIPE GENERAL DU PROJET                           #
+# ============================================================================ #
+
+Le projet ft_irc est un serveur IRC (Internet Relay Chat) ecrit en C++98.
+Il permet a plusieurs clients de se connecter simultanement, de discuter
+dans des channels (salons), et d'envoyer des messages prives.
+
+Le serveur fonctionne en mode NON-BLOQUANT avec un UNIQUE appel a poll()
+pour gerer toutes les operations d'entree/sortie (I/O multiplexing).
+Aucun fork() n'est utilise : tout se passe dans un seul processus.
+
+
+# ============================================================================ #
+#                         FONCTIONNEMENT GENERAL                                #
+# ============================================================================ #
+
+## Cycle de vie du serveur :
+
+1. DEMARRAGE
+   - Parse les arguments (port + password)
+   - Cree une socket TCP, la bind sur le port, commence a ecouter
+   - La socket est mise en mode non-bloquant (fcntl)
+
+2. BOUCLE PRINCIPALE (Server::run)
+   - Appelle poll() qui BLOQUE jusqu'a ce qu'un evenement se produise
+   - Pour chaque fd avec un evenement :
+     * Socket d'ecoute + POLLIN  -> accepte une nouvelle connexion
+     * Client + POLLERR/POLLHUP  -> marque le client pour deconnexion
+     * Client + POLLOUT          -> envoie les donnees en attente
+     * Client + POLLIN           -> lit les donnees recues
+   - Deconnecte les clients marques
+   - Met a jour les events poll (ajoute POLLOUT si buffer non vide)
+   - Recommence
+
+3. ARRET
+   - Signal SIGINT (Ctrl+C) ou SIGTERM -> g_running = false
+   - Sort de la boucle, le destructeur libere tout
+
+
+## Flux d'un message client :
+
+   Client envoie "PRIVMSG #chan :hello\r\n"
+        |
+        v
+   poll() signale POLLIN sur le fd du client
+        |
+        v
+   recv() lit les donnees brutes dans un buffer
+        |
+        v
+   extractLine() extrait la ligne complete (attend \r\n)
+        |
+        v
+   _processLine() parse la ligne IRC :
+   - Ignore le prefix (si present)
+   - Extrait la commande (PRIVMSG)
+   - Extrait les arguments (#chan, "hello")
+        |
+        v
+   _cmdPrivmsg() est appelee :
+   - Verifie que le channel existe
+   - Verifie que le client est membre
+   - Appelle ch->broadcast() qui queue le message dans le buffer de chaque membre
+        |
+        v
+   Au prochain cycle poll(), POLLOUT est signale pour chaque destinataire
+        |
+        v
+   _sendData() appelle flushSendBuffer() qui fait le send() reel
+
+
+# ============================================================================ #
+#                      SYSTEME DE BUFFER D'ENVOI                                #
+# ============================================================================ #
+
+C'est le mecanisme le plus important du projet. Il resout 2 problemes :
+
+PROBLEME 1 : L'eval demande que poll() soit appele AVANT chaque send().
+PROBLEME 2 : Si un client est stoppe (^Z), son buffer TCP se remplit et
+             send() bloquerait ou echouerait, ce qui pourrait bloquer le serveur.
+
+SOLUTION :
+- On ne fait JAMAIS de send() directement
+- On stocke les messages dans un buffer d'envoi par client (_sendBuffer)
+- On ajoute POLLOUT aux events du fd quand le buffer n'est pas vide
+- Quand poll() signale POLLOUT (= le fd est pret en ecriture), on flush le buffer
+- send() en non-bloquant peut n'envoyer qu'une partie -> on garde le reste pour plus tard
+
+Resultat : le serveur ne bloque JAMAIS, meme si un client est stoppe.
+
+
+# ============================================================================ #
+#                      GESTION DES COMMANDES PARTIELLES                         #
+# ============================================================================ #
+
+Le protocole TCP ne garantit pas que les donnees arrivent en une seule fois.
+Un client peut envoyer "PRIV" puis "MSG #chan :hi\r\n" en deux paquets.
+
+SOLUTION :
+- Chaque client a un buffer de reception (_buffer)
+- recv() ajoute les donnees au buffer
+- extractLine() cherche \r\n dans le buffer :
+  * Si trouve : retourne la ligne complete et l'efface du buffer
+  * Si pas trouve : retourne "" (on attend plus de donnees)
+
+Cela garantit qu'on ne traite que des commandes completes.
+
+
+# ============================================================================ #
+#                         PRINCIPALES FONCTIONS                                 #
+# ============================================================================ #
+
+## Server::run()
+La boucle principale. Appelle poll() puis dispatch les evenements.
+C'est le coeur du serveur.
+
+## Server::_processLine()
+Parse une ligne IRC brute. Le format IRC est :
+  [:<prefix>] <COMMANDE> [<arg1> <arg2> ... :<trailing>]
+Le trailing (commence par :) est un argument qui peut contenir des espaces.
+Exemple : "PRIVMSG #chan :Hello World" -> cmd=PRIVMSG, args=["#chan", "Hello World"]
+
+## Server::_sendReply()
+N'envoie PAS directement. Queue le message dans le buffer d'envoi du client.
+Le send() reel se fait dans _sendData() quand POLLOUT est signale.
+
+## Server::_sendData()
+Appele quand poll() signale POLLOUT. Flush le buffer d'envoi via send().
+Si send() echoue -> le client est marque pour deconnexion.
+
+## Client::extractLine()
+Extrait une ligne complete du buffer de reception. Gere \r\n et \n.
+Retourne "" si pas de ligne complete (commande partielle).
+
+## Client::flushSendBuffer()
+Fait le send() reel. En non-bloquant, send() peut n'envoyer qu'une partie
+des donnees (si le buffer kernel est partiellement plein). On efface
+seulement ce qui a ete envoye, le reste sera envoye au prochain POLLOUT.
+
+## Channel::broadcast()
+Envoie un message a tous les membres d'un channel (sauf exclude).
+Utilise queueMessage() pour respecter le mecanisme de buffer d'envoi.
+
+## Server::_cmdMode()
+La commande la plus complexe. Parse un modestring comme "+itk-o secret nick" :
+- '+' et '-' changent le sens (ajout/retrait de mode)
+- Chaque caractere de mode est traite individuellement
+- Certains modes (+k, +o, +l, -o) consomment un parametre supplementaire
+- On accumule les modes appliques pour les broadcaster en une seule fois
+
+## Server::_cmdJoin()
+Gere le join avec toutes les verifications :
+- Nom valide (commence par #)
+- Mode +i : verifie l'invitation
+- Mode +k : verifie la cle
+- Mode +l : verifie la limite
+- Premier membre = operateur automatique
+- Envoie : broadcast JOIN + topic + NAMES list
+
+
+# ============================================================================ #
+#                         ENREGISTREMENT D'UN CLIENT                            #
+# ============================================================================ #
+
+Un client doit s'enregistrer avant de pouvoir utiliser les commandes IRC.
+L'enregistrement se fait en 3 etapes obligatoires dans cet ordre :
+
+1. PASS <password>   -> Verifie le mot de passe du serveur
+2. NICK <nickname>   -> Definit un nickname unique
+3. USER <user> 0 * :<realname>  -> Definit le username
+
+Tant que les 3 ne sont pas faits, seuls PASS/NICK/USER/QUIT sont acceptes.
+Une fois registered, le serveur envoie les messages de bienvenue (001-004).
+
+
+# ============================================================================ #
+#                         GESTION DES OPERATEURS                                #
+# ============================================================================ #
+
+Le premier client a rejoindre un channel en devient automatiquement operateur.
+Un operateur peut :
+- KICK : expulser un membre
+- INVITE : inviter quelqu'un (necessaire pour les channels +i)
+- TOPIC : changer le topic (meme si +t est actif)
+- MODE : changer les modes du channel
+
+Un operateur peut donner/retirer le statut op avec MODE +o/-o <nick>.
+
+
+# ============================================================================ #
+#                         GESTION DE LA MEMOIRE                                 #
+# ============================================================================ #
+
+- Les Client* sont alloues avec new dans _acceptClient()
+- Les Channel* sont alloues avec new dans _getOrCreateChannel()
+- Les Client* sont delete dans _removeClient() (deconnexion)
+- Les Channel* sont delete quand ils deviennent vides (dernier membre part)
+- Le destructeur ~Server() delete tout ce qui reste (arret du serveur)
+
+Pas de leak : chaque new a son delete correspondant.
+
+
+# ============================================================================ #
+#                         STRUCTURE DES FICHIERS                                #
+# ============================================================================ #
+
+main.cpp      -> Point d'entree, validation des arguments, creation du Server
+Server.cpp    -> Boucle poll(), accept, recv, send, gestion des connexions
+Commands.cpp  -> Implementation de chaque commande IRC (PASS, NICK, JOIN, etc.)
+Client.cpp    -> Etat d'un client, buffers de reception et d'envoi
+Channel.cpp   -> Etat d'un channel, membres, operateurs, modes, broadcast
+
+Server.hpp    -> Declaration de la classe Server (toutes les methodes privees)
+Client.hpp    -> Declaration de la classe Client
+Channel.hpp   -> Declaration de la classe Channel
