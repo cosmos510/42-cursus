@@ -72,13 +72,13 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /home/maxmarti/data/wordpress
+      device: /Users/maximemartin/data/wordpress
   mariadb_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /home/maxmarti/data/mariadb
+      device: /Users/maximemartin/data/mariadb
 
 secrets:
   db_root_password:
